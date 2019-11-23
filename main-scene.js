@@ -361,13 +361,13 @@ class Assignment_Three_Scene extends Scene_Component
                       // scene should do to its bodies every frame -- including applying forces.
                       // Generate additional moving bodies if there ever aren't enough:
       
-      for( let b of this.bodies )
-      {                                         // Gravity on Earth, where 1 unit in world space = 1 meter:
-        b.linear_velocity[1] += dt * -9.8;
-                                                // If about to fall through floor, reverse y velocity:
-        if( b.center[1] < -8 && b.linear_velocity[1] < 0 )
-          b.linear_velocity[1] *= -.8;
-      }
+      // for( let b of this.bodies )
+      // {                                         // Gravity on Earth, where 1 unit in world space = 1 meter:
+      //   b.linear_velocity[1] += dt * -9.8;
+      //                                           // If about to fall through floor, reverse y velocity:
+      //   if( b.center[1] < -8 && b.linear_velocity[1] < 0 )
+      //     b.linear_velocity[1] *= -.8;
+      // }
 
       const collider = this.colliders[ this.collider_selection ];
       for (let a of this.bodies) {
@@ -434,17 +434,18 @@ class Assignment_Three_Scene extends Scene_Component
     }
 
     create_wall(graphics_state, model_transform) {
-        for(var i = 0; i < 10; i++) {
-            for(var j = 0; j < 10; j++) {
-                model_transform= model_transform
-                    .times( Mat4.translation([2,0,0]));
+        model_transform = model_transform.times(Mat4.translation([0,5,0]));
+        for(var i = 0; i < 5; i++) {
+            for(var j = 0; j < 5; j++) {
 
-                this.bodies.push(new Body(this.shapes.block_P, this.materials.wall, vec3(1,1,1))
+                this.bodies.push(new Body(this.shapes.block_P, this.materials.wall, vec3(2,2,1))
                     .emplace(model_transform, vec3(0,0,0), 0, vec3(0,0,0) ));
+                model_transform= model_transform
+                    .times( Mat4.translation([2,0,0]))
                 //this.shapes.block.draw(graphics_state, model_transform, this.materials.test);
             }
             model_transform = model_transform
-                .times( Mat4.translation([-20, 2,0]));
+                .times( Mat4.translation([-10, 2,0]));
         }
         return model_transform;
 
@@ -461,8 +462,9 @@ class Assignment_Three_Scene extends Scene_Component
 
         this.simulate( graphics_state.animation_delta_time );
 
-        let model_transform = this.create_ground(graphics_state, Mat4.identity());
+        let model_transform = Mat4.identity().times(Mat4.scale([2,2,1]));
 
+        model_transform = this.create_ground(graphics_state, Mat4.identity());
         if (!this.added) {
           model_transform = this.create_wall(graphics_state, model_transform);
           //this.physics_on_one_block(graphics_state, Mat4.identity());
@@ -471,7 +473,7 @@ class Assignment_Three_Scene extends Scene_Component
 
 
         for( let b of this.bodies ) 
-        	b.shape.draw( graphics_state, Mat4.translation([b.center[0], b.center[1], b.center[2]]), b.material );
+        	b.shape.draw( graphics_state, Mat4.scale(b.size).times(Mat4.translation([b.center[0], b.center[1], b.center[2]])), b.material );
 
         // TODO:  Fill in matrix operations and drawing code to draw the solar system scene (Requirements 2 and 3)
 
