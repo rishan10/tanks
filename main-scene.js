@@ -265,13 +265,18 @@ class Body
       if ( this == b ) 
         return false;                     // Nothing collides with itself.
                                           // Convert sphere b to the frame where a is a unit sphere:
-      const T = this.inverse.times( b.drawn_location, this.temp_matrix );
+
+      let model = Mat4.translation(this.center);
+      let inverse = Mat4.inverse(model);
+
+      const T = inverse.times( b.drawn_location, this.temp_matrix );
 
       const { intersect_test, points, leeway } = collider;
+     
                                           // For each vertex in that b, shift to the coordinate frame of
                                           // a_inv*b.  Check if in that coordinate frame it penetrates 
                                           // the unit sphere at the origin.  Leave some leeway.
-      return points.arrays.position.some( p => 
+      return points.positions.some( p => 
         intersect_test( T.times( p.to4(1) ).to3(), leeway ) );
     }
 }
@@ -315,11 +320,18 @@ class Assignment_Three_Scene extends Scene_Component
 
         const shapes = { 
                          block : new Cube(),
-            square: new Square()
+                         square: new Square(),
+                         block_P: new Cube_P()
 
                                 // TODO:  Fill in as many additional shape instances as needed in this key/value table.
                                 //        (Requirement 1)
                        }
+
+        this.colliders = [
+          { intersect_test: Body.intersect_cube,   points: new Cube_P(),  leeway: .1 }
+        ];
+        this.collider_selection = 0;
+
         this.submit_shapes( context, shapes );
 
                                      // Make some Material objects available to you:
@@ -356,7 +368,18 @@ class Assignment_Three_Scene extends Scene_Component
         if( b.center[1] < -8 && b.linear_velocity[1] < 0 )
           b.linear_velocity[1] *= -.8;
       }
-                                                      // Delete bodies that stop or stray too far away:
+
+      const collider = this.colliders[ this.collider_selection ];
+      for (let a of this.bodies) {
+        for( let b of this.bodies )                                      
+            {                               // Pass the two bodies and the collision shape to check_if_colliding():
+              if( !a.check_if_colliding( b, collider ) )
+                continue;
+              a.linear_velocity  = vec3( 0,0,0 );
+              a.angular_velocity = 0;
+            }  
+      }
+                                               // Delete bodies that stop or stray too far away:
       //this.bodies = this.bodies.filter( b => b.center.norm() < 50 && b.linear_velocity.norm() > 2 );
     }
 
@@ -415,7 +438,10 @@ class Assignment_Three_Scene extends Scene_Component
             for(var j = 0; j < 10; j++) {
                 model_transform= model_transform
                     .times( Mat4.translation([2,0,0]));
-                this.shapes.block.draw(graphics_state, model_transform, this.materials.test);
+
+                this.bodies.push(new Body(this.shapes.block_P, this.materials.wall, vec3(1,1,1))
+                    .emplace(model_transform, vec3(0,0,0), 0, vec3(0,0,0) ));
+                //this.shapes.block.draw(graphics_state, model_transform, this.materials.test);
             }
             model_transform = model_transform
                 .times( Mat4.translation([-20, 2,0]));
@@ -426,7 +452,7 @@ class Assignment_Three_Scene extends Scene_Component
 
     physics_on_one_block(graphics_state, model_transform) {
     	this.bodies.push(new Body(this.shapes.block, this.materials.test, vec3(1,1,1))
-    		.emplace(Mat4.translation([2, 20, 0]), vec3(0,-1,0), 0, vec3(0,0,0) ));
+    		.emplace(Mat4.translation([2, 20, 0]), vec3(0,0,0), 0, vec3(0,0,0) ));
     }
 
     display( graphics_state )
@@ -435,23 +461,40 @@ class Assignment_Three_Scene extends Scene_Component
 
         this.simulate( graphics_state.animation_delta_time );
 
+        let model_transform = this.create_ground(graphics_state, Mat4.identity());
+
+        if (!this.added) {
+          model_transform = this.create_wall(graphics_state, model_transform);
+          //this.physics_on_one_block(graphics_state, Mat4.identity());
+          this.added = true;
+        }
+
+
         for( let b of this.bodies ) 
         	b.shape.draw( graphics_state, Mat4.translation([b.center[0], b.center[1], b.center[2]]), b.material );
 
         // TODO:  Fill in matrix operations and drawing code to draw the solar system scene (Requirements 2 and 3)
-        if (!this.added) {
-        	this.physics_on_one_block(graphics_state, Mat4.identity());
-        	this.added = true;
-        }
 
-        //console.log(this.bodies[0].center)
+       
 
-        let model_transform = this.create_ground(graphics_state, Mat4.identity());
         //model_transform = this.create_wall(graphics_state, model_transform);
 
       }
   }
 
+window.Cube_P = window.classes.Cube_P =
+class Cube_P extends Shape    // A cube inserts six square strips into its arrays.
+{ constructor()  
+    { super( "positions", "normals", "texture_coords" );
+      for( var i = 0; i < 3; i++ )                    
+        for( var j = 0; j < 2; j++ )
+        { var square_transform = Mat4.rotation( i == 0 ? Math.PI/2 : 0, Vec.of(1, 0, 0) )
+                         .times( Mat4.rotation( Math.PI * j - ( i == 1 ? Math.PI/2 : 0 ), Vec.of( 0, 1, 0 ) ) )
+                         .times( Mat4.translation([ 0, 0, 1 ]) );
+          Square.insert_transformed_copy_into( this, [], square_transform );
+        }
+    }
+}
 
 window.Cube = window.classes.Cube =
     class Cube extends Shape                 // Here's a complete, working example of a Shape subclass.  It is a blueprint for a cube.
