@@ -321,7 +321,7 @@ class Assignment_Three_Scene extends Scene_Component
         const shapes = { 
                          block : new Cube(),
                          square: new Square(),
-                         block_P: new Cube_P()
+                         block_P: new Cube_P(),
 
                                 // TODO:  Fill in as many additional shape instances as needed in this key/value table.
                                 //        (Requirement 1)
@@ -336,7 +336,10 @@ class Assignment_Three_Scene extends Scene_Component
 
                                      // Make some Material objects available to you:
         this.materials =
-          { test:     context.get_instance( Phong_Shader ).material( Color.of( 0,0,1,1 ), { ambient:1 } ),
+          {   test:     context.get_instance( Phong_Shader ).material( Color.of( 0,0,1,1 ), { ambient:1 } ),
+              tankBody:     context.get_instance( Phong_Shader ).material( Color.of( 0.5,0.7,0.4,1 ), { ambient:0.4 } ),
+              tankTreads:     context.get_instance( Phong_Shader ).material( Color.of( 0.2,0.2,0,1 ), { ambient:0.4 } ),
+              turretBody:     context.get_instance( Phong_Shader ).material( Color.of( 0.3,0.5,0.2,1 ), { ambient:0.4 } ),
               ground: context.get_instance( Phong_Shader ).material(Color.of(0,0,0,1), {ambient: 1, texture: context.get_instance("assets/ground.jpeg", false)}),
               wall: context.get_instance( Phong_Shader ).material(Color.of(0,0,0,1), {ambient: 1, texture: context.get_instance("assets/brick.png", false)})
             //ring:     context.get_instance( Ring_Shader  ).material()
@@ -456,6 +459,36 @@ class Assignment_Three_Scene extends Scene_Component
     		.emplace(Mat4.translation([2, 20, 0]), vec3(0,0,0), 0, vec3(0,0,0) ));
     }
 
+    create_tank(graphics_state, model_transform) {
+        let orig_transform = model_transform;
+        //model_transform = orig_transform.times(Mat4.scale([ 2,1,3 ]))
+        //this.shapes.block.draw( graphics_state, model_transform, this.materials.tankBody );
+
+        model_transform = orig_transform.times(Mat4.translation([0, 2.5, 0])).times(Mat4.scale([ 3,0.5,5.5 ]))
+        this.shapes.block.draw( graphics_state, model_transform, this.materials.tankBody );
+
+        model_transform = orig_transform.times(Mat4.translation([0, 1, 0])).times(Mat4.scale([ 4,1,6 ]))
+        this.shapes.block.draw( graphics_state, model_transform, this.materials.tankBody );
+
+        model_transform = orig_transform.times(Mat4.translation([0, 0.25, 0])).times(Mat4.scale([ 4,1,6.5 ]))
+        this.shapes.block.draw( graphics_state, model_transform, this.materials.tankBody );
+
+        model_transform = orig_transform.times(Mat4.translation([4.75, 0, 0])).times(Mat4.scale([ -0.75,1,6 ]))
+        this.shapes.block.draw( graphics_state, model_transform, this.materials.tankTreads );
+
+        model_transform = orig_transform.times(Mat4.translation([-4.75, 0, 0])).times(Mat4.scale([ 0.75,1,6 ]))
+        this.shapes.block.draw( graphics_state, model_transform, this.materials.tankTreads );
+    }
+
+    create_turret(graphics_state, model_transform) {
+        let orig_transform = model_transform;
+        model_transform = orig_transform.times(Mat4.translation([0, 4, 0])).times(Mat4.scale([ 2,1,3 ]))
+        this.shapes.block.draw( graphics_state, model_transform, this.materials.turretBody );
+
+        model_transform = orig_transform.times(Mat4.translation([0, 4, 3])).times(Mat4.scale([ 0.25,0.25,6 ]))
+        this.shapes.block.draw( graphics_state, model_transform, this.materials.turretBody );
+    }
+
     display( graphics_state )
       { graphics_state.lights = this.lights;        // Use the lights stored in this.lights.
         const t = graphics_state.animation_time / 1000, dt = graphics_state.animation_delta_time / 1000;
@@ -477,7 +510,8 @@ class Assignment_Three_Scene extends Scene_Component
 
         // TODO:  Fill in matrix operations and drawing code to draw the solar system scene (Requirements 2 and 3)
 
-       
+       this.create_tank(graphics_state, Mat4.identity());
+        this.create_turret(graphics_state, Mat4.identity());
 
         //model_transform = this.create_wall(graphics_state, model_transform);
 
