@@ -368,7 +368,7 @@ class Assignment_Three_Scene extends Scene_Component
       // {                                         // Gravity on Earth, where 1 unit in world space = 1 meter:
       //   b.linear_velocity[1] += dt * -9.8;
       //                                           // If about to fall through floor, reverse y velocity:
-      //   if( b.center[1] < -8 && b.linear_velocity[1] < 0 )
+      //   if( b.center[1] < -4 && b.linear_velocity[1] < 0 )
       //     b.linear_velocity[1] *= -.8;
       // }
 
@@ -376,8 +376,12 @@ class Assignment_Three_Scene extends Scene_Component
       for (let a of this.bodies) {
         for( let b of this.bodies )                                      
             {                               // Pass the two bodies and the collision shape to check_if_colliding():
-              if( !a.check_if_colliding( b, collider ) )
-                continue;
+              // if( !a.check_if_colliding( b, collider ) ) {
+              //   a.linear_velocity[1] += dt * -9.8;
+              //   if( a.center[1] < -4 && a.linear_velocity[1] < 0 )
+              //     a.linear_velocity[1] *= -.8;
+              //   continue;
+              // }
               a.linear_velocity  = vec3( 0,0,0 );
               a.angular_velocity = 0;
             }  
@@ -427,21 +431,21 @@ class Assignment_Three_Scene extends Scene_Component
       }
 
     create_ground(graphics_state, model_transform) {
-        model_transform = model_transform.times( Mat4.translation( [0,-10,0] )).times( Mat4.rotation( Math.PI/2,   Vec.of(1,0,0) ) ).times( Mat4.scale( [50,50,1] ) );
+        model_transform = model_transform.times( Mat4.translation( [0,-10,0] )).times( Mat4.rotation( Math.PI/2,   Vec.of(1,0,0) ) ).times( Mat4.scale( [100,100,1] ) );
 
         this.shapes.square.draw( graphics_state,  model_transform ,
             this.materials.ground);
-        model_transform = model_transform.times(Mat4.scale([1/50, 1/50,1])).times(Mat4.rotation(Math.PI/2, Vec.of(-1,0,0)))
+        model_transform = model_transform.times(Mat4.scale([1/100, 1/100,1])).times(Mat4.rotation(Math.PI/2, Vec.of(-1,0,0)))
         model_transform = model_transform.times(Mat4.translation([0,1,0]))
         return model_transform;
     }
 
     create_wall(graphics_state, model_transform) {
-        model_transform = model_transform.times(Mat4.translation([0,5,0]));
+        model_transform = model_transform.times(Mat4.translation([0,7.5,0]));
         for(var i = 0; i < 5; i++) {
             for(var j = 0; j < 5; j++) {
 
-                this.bodies.push(new Body(this.shapes.block_P, this.materials.wall, vec3(2,2,1))
+                this.bodies.push(new Body(this.shapes.block_P, this.materials.wall, vec3(4,4,1))
                     .emplace(model_transform, vec3(0,0,0), 0, vec3(0,0,0) ));
                 model_transform= model_transform
                     .times( Mat4.translation([2,0,0]))
@@ -454,10 +458,6 @@ class Assignment_Three_Scene extends Scene_Component
 
     }
 
-    physics_on_one_block(graphics_state, model_transform) {
-    	this.bodies.push(new Body(this.shapes.block, this.materials.test, vec3(1,1,1))
-    		.emplace(Mat4.translation([2, 20, 0]), vec3(0,0,0), 0, vec3(0,0,0) ));
-    }
 
     create_tank(graphics_state, model_transform) {
         let orig_transform = model_transform;
@@ -495,7 +495,13 @@ class Assignment_Three_Scene extends Scene_Component
 
         this.simulate( graphics_state.animation_delta_time );
 
-        let model_transform = Mat4.identity().times(Mat4.scale([2,2,1]));
+
+        let model_tank = Mat4.identity().times(Mat4.translation([10,-9,-80]));
+
+        this.create_tank(graphics_state, model_tank);
+        this.create_turret(graphics_state, model_tank);
+
+        let model_transform = Mat4.identity().times(Mat4.scale([4,4,1]));
 
         model_transform = this.create_ground(graphics_state, Mat4.identity());
         if (!this.added) {
@@ -510,8 +516,6 @@ class Assignment_Three_Scene extends Scene_Component
 
         // TODO:  Fill in matrix operations and drawing code to draw the solar system scene (Requirements 2 and 3)
 
-       this.create_tank(graphics_state, Mat4.identity());
-        this.create_turret(graphics_state, Mat4.identity());
 
         //model_transform = this.create_wall(graphics_state, model_transform);
 
