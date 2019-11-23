@@ -495,11 +495,22 @@ class Assignment_Three_Scene extends Scene_Component
 
         this.simulate( graphics_state.animation_delta_time );
 
-
+        // create 3 tanks
         let model_tank = Mat4.identity().times(Mat4.translation([10,-9,-80]));
 
         this.create_tank(graphics_state, model_tank);
         this.create_turret(graphics_state, model_tank);
+
+        model_tank = Mat4.identity().times(Mat4.translation([40,-9,-80]));
+
+        this.create_tank(graphics_state, model_tank);
+        this.create_turret(graphics_state, model_tank);
+
+        model_tank = Mat4.identity().times(Mat4.translation([25,-9,-60]));
+
+        this.create_tank(graphics_state, model_tank);
+        this.create_turret(graphics_state, model_tank);
+
 
         let model_transform = Mat4.identity().times(Mat4.scale([4,4,1]));
 
