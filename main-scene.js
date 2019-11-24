@@ -320,10 +320,11 @@ class Assignment_Three_Scene extends Scene_Component
         const r = context.width/context.height;
         context.globals.graphics_state.projection_transform = Mat4.perspective( Math.PI/4, r, .1, 1000 );
 
-        const shapes = { 
+        this.shapes = {
                          block : new Cube(),
                          square: new Square(),
-                         block_texture: new Cube_P()
+                         block_texture: new Cube_P(),
+                        ball: new Cube()
                          
 
                                 // TODO:  Fill in as many additional shape instances as needed in this key/value table.
@@ -335,9 +336,13 @@ class Assignment_Three_Scene extends Scene_Component
         ];
         this.collider_selection = 0;
 
-        this.submit_shapes( context, shapes );
+        this.submit_shapes( context, this.shapes );
 
         this.turret_angle = 0;
+
+        this.projectiles = [];
+        this.model_tank = Mat4.identity();
+        this.power = 5;
 
                                      // Make some Material objects available to you:
         this.materials =
@@ -423,7 +428,7 @@ class Assignment_Three_Scene extends Scene_Component
 
     make_control_panel()            // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
       { this.key_triggered_button( "Increase turret angle",  [ "q" ], () => {
-        if(this.turret_angle + 5 < 180) {
+        if(this.turret_angle + 5 < 45) {
           this.turret_angle += 5; //add 5 degrees
         }
       } );
@@ -433,6 +438,12 @@ class Assignment_Three_Scene extends Scene_Component
             this.turret_angle -= 5;
           }
         } );
+        this.new_line();
+        this.key_triggered_button( "Fire cannon", [ " " ], () => {
+          this.projectiles.push(new Body(this.shapes.ball, this.materials.test, vec3(1,1,1))
+              .emplace(this.model_tank, vec3(0,0,0), 0, vec3(0,0,0) ));
+        } );
+
       }
 
     create_ground(graphics_state, model_transform) {
@@ -501,20 +512,25 @@ class Assignment_Three_Scene extends Scene_Component
         this.simulate( graphics_state.animation_delta_time );
 
         // create 3 tanks
-        let model_tank = Mat4.identity().times(Mat4.translation([10,-9,-80]));
+        this.model_tank = Mat4.identity().times(Mat4.translation([10,-9,-80]));
 
-        this.create_tank(graphics_state, model_tank);
-        this.create_turret(graphics_state, model_tank);
+        this.create_tank(graphics_state, this.model_tank);
+        //draw test axis
+        // this.shapes.ball.draw(graphics_state, model_tank.times(Mat4.translation([0,3,-3 ])), this.materials.test);
+        this.model_tank = this.model_tank.times(Mat4.translation([0, 3, -3]))
+            .times( Mat4.rotation(this.turret_angle * (Math.PI / 180.0), Vec.of(-1,0,0)) )
+            .times(Mat4.translation([0, -3, 3]));
+        this.create_turret(graphics_state, this.model_tank);
 
-        model_tank = Mat4.identity().times(Mat4.translation([40,-9,-80]));
-
-        this.create_tank(graphics_state, model_tank);
-        this.create_turret(graphics_state, model_tank);
-
-        model_tank = Mat4.identity().times(Mat4.translation([25,-9,-60]));
-
-        this.create_tank(graphics_state, model_tank);
-        this.create_turret(graphics_state, model_tank);
+        // model_tank = Mat4.identity().times(Mat4.translation([40,-9,-80]));
+        //
+        // this.create_tank(graphics_state, model_tank);
+        // this.create_turret(graphics_state, model_tank);
+        //
+        // model_tank = Mat4.identity().times(Mat4.translation([25,-9,-60]));
+        //
+        // this.create_tank(graphics_state, model_tank);
+        // this.create_turret(graphics_state, model_tank);
 
 
 
@@ -532,6 +548,12 @@ class Assignment_Three_Scene extends Scene_Component
 
         for( let b of this.bodies ) {
         	b.shape.draw( graphics_state, b.drawn_location, b.material );
+        }
+
+        console.log(this.projectiles.length);
+        for( let p of this.projectiles) {
+          console.log("drawing");
+          p.shape.draw(graphics_state, p.drawn_location, p.material);
         }
 
         // TODO:  Fill in matrix operations and drawing code to draw the solar system scene (Requirements 2 and 3)
