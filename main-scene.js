@@ -340,7 +340,7 @@ class Assignment_Three_Scene extends Scene_Component
 
         this.projectiles = [];
         this.model_tank = Mat4.identity();
-        this.power = 10;
+        this.power = 7;
 
                                      // Make some Material objects available to you:
         this.materials =
@@ -393,7 +393,14 @@ class Assignment_Three_Scene extends Scene_Component
       }
 
       for (let a of this.projectiles) {
-        a.linear_velocity[1] += dt * -9.8 * Math.sin(this.turret_angle);
+        a.linear_velocity[1] += dt * -9.8;
+        
+        console.log(a.center[1])
+        if(a.center[1] < -9) {
+          a.linear_velocity[1] *= -0.7
+          a.linear_velocity[2] *= 0.7
+        }
+
       }
                                                // Delete bodies that stop or stray too far away:
       //this.bodies = this.bodies.filter( b => b.center.norm() < 50 && b.linear_velocity.norm() > 2 );
@@ -447,7 +454,7 @@ class Assignment_Three_Scene extends Scene_Component
         this.new_line();
         this.key_triggered_button( "Fire cannon", [ " " ], () => {
           this.projectiles.push(new Body(this.shapes.ball, this.materials.test, vec3(1,1,1))
-              .emplace(this.model_tank, vec3(0,this.power * Math.sin(this.turret_angle*(Math.PI/180.0)),this.power * Math.cos(this.turret_angle*(Math.PI/180.0))), 0, vec3(0,0,0) ));
+              .emplace(this.model_tank.times(Mat4.translation([0,2,6])), vec3(0,this.power * Math.sin(this.turret_angle*(Math.PI/180.0)),this.power * Math.cos(this.turret_angle*(Math.PI/180.0))), 0, vec3(0,0,0) ));
         } );
 
       }
@@ -556,7 +563,7 @@ class Assignment_Three_Scene extends Scene_Component
         	b.shape.draw( graphics_state, b.drawn_location, b.material );
         }
 
-        console.log(this.projectiles);
+        // console.log(this.projectiles);
         for( let p of this.projectiles) {
           p.shape.draw(graphics_state, p.drawn_location, p.material);
         }
