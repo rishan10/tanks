@@ -337,6 +337,8 @@ class Assignment_Three_Scene extends Scene_Component
 
         this.submit_shapes( context, shapes );
 
+        this.turret_angle = 0;
+
                                      // Make some Material objects available to you:
         this.materials =
           {   test:     context.get_instance( Phong_Shader ).material( Color.of( 0,0,1,1 ), { ambient:1 } ),
@@ -420,14 +422,17 @@ class Assignment_Three_Scene extends Scene_Component
     }
 
     make_control_panel()            // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
-      { this.key_triggered_button( "View solar system",  [ "0" ], () => this.attached = () => this.initial_camera_location );
+      { this.key_triggered_button( "Increase turret angle",  [ "q" ], () => {
+        if(this.turret_angle + 5 < 180) {
+          this.turret_angle += 5; //add 5 degrees
+        }
+      } );
         this.new_line();
-        this.key_triggered_button( "Attach to planet 1", [ "1" ], () => this.attached = () => this.planet_1 );
-        this.key_triggered_button( "Attach to planet 2", [ "2" ], () => this.attached = () => this.planet_2 ); this.new_line();
-        this.key_triggered_button( "Attach to planet 3", [ "3" ], () => this.attached = () => this.planet_3 );
-        this.key_triggered_button( "Attach to planet 4", [ "4" ], () => this.attached = () => this.planet_4 ); this.new_line();
-        this.key_triggered_button( "Attach to planet 5", [ "5" ], () => this.attached = () => this.planet_5 );
-        this.key_triggered_button( "Attach to moon",     [ "m" ], () => this.attached = () => this.moon     );
+        this.key_triggered_button( "Decrease turret angle", [ "e" ], () => {
+          if(this.turret_angle - 5 >= 0) {
+            this.turret_angle -= 5;
+          }
+        } );
       }
 
     create_ground(graphics_state, model_transform) {
