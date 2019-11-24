@@ -214,7 +214,8 @@ class Body
   emplace( location_matrix, linear_velocity, angular_velocity, spin_axis = vec3( 0,0,0 ).randomized(1).normalized() )
     {                               // emplace(): assign the body's initial values, or overwrite them.
       this.center   = location_matrix.times( vec4( 0,0,0,1 ) ).to3();
-      this.rotation = Mat4.translation( ...this.center.times( -1 ) ).times( location_matrix );
+      let translate_point = this.center.times( -1 );
+      this.rotation = Mat4.translation( [translate_point[0], translate_point[1], translate_point[2]] ).times( location_matrix );
       this.previous = { center: this.center.copy(), rotation: this.rotation.copy() };
                                               // drawn_location gets replaced with an interpolated quantity:
       this.drawn_location = location_matrix;
@@ -242,9 +243,10 @@ class Body
     {                             // blend_state(): Compute the final matrix we'll draw using the previous two physical
                                   // locations the object occupied.  We'll interpolate between these two states as 
                                   // described at the end of the "Fix Your Timestep!" blog post.
-      this.drawn_location = Mat4.translation( ...this.previous.center.mix( this.center, alpha ) )
+      let translate_point =  this.previous.center.mix( this.center, alpha ); 
+      this.drawn_location = Mat4.translation( [translate_point[0], translate_point[1], translate_point[2]] )
                                       .times( this.blend_rotation( alpha ) )
-                                      .times( Mat4.scale( ...this.size ) );
+                                      .times( Mat4.scale( this.size ) );
     }
                                               // The following are our various functions for testing a single point,
                                               // p, against some analytically-known geometric volume formula 
@@ -312,7 +314,7 @@ class Assignment_Three_Scene extends Scene_Component
         if( !context.globals.has_controls   )
           context.register_scene_component( new Movement_Controls( context, control_box.parentElement.insertCell() ) );
 
-        context.globals.graphics_state.camera_transform = Mat4.look_at( Vec.of( 2.13,54.49,-215.71 ), Vec.of( 0,0,0 ), Vec.of( 0,1,0 ) );
+        context.globals.graphics_state.camera_transform = Mat4.look_at( Vec.of( 7.85,40.51,-158.78 ), Vec.of( 0,0,0 ), Vec.of( 0,1,0 ) );
         this.initial_camera_location = Mat4.inverse( context.globals.graphics_state.camera_transform );
 
         const r = context.width/context.height;
@@ -321,14 +323,15 @@ class Assignment_Three_Scene extends Scene_Component
         const shapes = { 
                          block : new Cube(),
                          square: new Square(),
-                         block_P: new Cube_P(),
+                         block_texture: new Cube_P()
+                         
 
                                 // TODO:  Fill in as many additional shape instances as needed in this key/value table.
                                 //        (Requirement 1)
                        }
 
         this.colliders = [
-          { intersect_test: Body.intersect_cube,   points: new Cube_P(),  leeway: .1 }
+          { intersect_test: Body.intersect_cube,   points: new Cube(),  leeway: .1 }
         ];
         this.collider_selection = 0;
 
@@ -376,12 +379,12 @@ class Assignment_Three_Scene extends Scene_Component
       for (let a of this.bodies) {
         for( let b of this.bodies )                                      
             {                               // Pass the two bodies and the collision shape to check_if_colliding():
-              // if( !a.check_if_colliding( b, collider ) ) {
-              //   a.linear_velocity[1] += dt * -9.8;
-              //   if( a.center[1] < -4 && a.linear_velocity[1] < 0 )
-              //     a.linear_velocity[1] *= -.8;
-              //   continue;
-              // }
+              if( !a.check_if_colliding( b, collider ) ) {
+                a.linear_velocity[1] += dt * -9.8;
+                if( a.center[1] < -4 && a.linear_velocity[1] < 0 )
+                  a.linear_velocity[1] *= -.8;
+                continue;
+              }
               a.linear_velocity  = vec3( 0,0,0 );
               a.angular_velocity = 0;
             }  
@@ -441,18 +444,18 @@ class Assignment_Three_Scene extends Scene_Component
     }
 
     create_wall(graphics_state, model_transform) {
-        model_transform = model_transform.times(Mat4.translation([0,7.5,0]));
-        for(var i = 0; i < 5; i++) {
-            for(var j = 0; j < 5; j++) {
+        model_transform = model_transform.times(Mat4.translation([-40,3,0]));
+        for(var i = 0; i < 3; i++) {
+            for(var j = 0; j < 10; j++) {
 
-                this.bodies.push(new Body(this.shapes.block_P, this.materials.wall, vec3(4,4,1))
+                this.bodies.push(new Body(this.shapes.block_texture, this.materials.wall, vec3(4,4,1))
                     .emplace(model_transform, vec3(0,0,0), 0, vec3(0,0,0) ));
                 model_transform= model_transform
-                    .times( Mat4.translation([2,0,0]))
+                    .times( Mat4.translation([8,0,0]))
                 //this.shapes.block.draw(graphics_state, model_transform, this.materials.test);
             }
             model_transform = model_transform
-                .times( Mat4.translation([-10, 2,0]));
+                .times( Mat4.translation([-80, 8,0]));
         }
         return model_transform;
 
@@ -522,8 +525,9 @@ class Assignment_Three_Scene extends Scene_Component
         }
 
 
-        for( let b of this.bodies ) 
-        	b.shape.draw( graphics_state, Mat4.scale(b.size).times(Mat4.translation([b.center[0], b.center[1], b.center[2]])), b.material );
+        for( let b of this.bodies ) {
+        	b.shape.draw( graphics_state, b.drawn_location, b.material );
+        }
 
         // TODO:  Fill in matrix operations and drawing code to draw the solar system scene (Requirements 2 and 3)
 
@@ -550,7 +554,7 @@ class Cube_P extends Shape    // A cube inserts six square strips into its array
 window.Cube = window.classes.Cube =
     class Cube extends Shape                 // Here's a complete, working example of a Shape subclass.  It is a blueprint for a cube.
     { constructor()
-    { super( "positions", "normals" ); // Name the values we'll define per each vertex.  They'll have positions and normals.
+    { super( "positions", "normals", "texture_coords" ); // Name the values we'll define per each vertex.  They'll have positions and normals.
 
         // First, specify the vertex positions -- just a bunch of points that exist at the corners of an imaginary cube.
         this.positions.push( ...Vec.cast( [-1,-1,-1], [1,-1,-1], [-1,-1,1], [1,-1,1], [1,1,-1],  [-1,1,-1],  [1,1,1],  [-1,1,1],
@@ -561,6 +565,8 @@ window.Cube = window.classes.Cube =
         this.normals.push(   ...Vec.cast( [0,-1,0], [0,-1,0], [0,-1,0], [0,-1,0], [0,1,0], [0,1,0], [0,1,0], [0,1,0], [-1,0,0], [-1,0,0],
             [-1,0,0], [-1,0,0], [1,0,0],  [1,0,0],  [1,0,0], [1,0,0], [0,0,1], [0,0,1], [0,0,1],   [0,0,1],
             [0,0,-1], [0,0,-1], [0,0,-1], [0,0,-1] ) );
+
+        this.texture_coords.push( ...Vec.cast([0,0], [1, 0], [1,1], [0,1], [0, 0], [1,0], [1,1], [0,1], [0,0], [1, 0], [1, 1], [0, 1], [0, 0], [1, 0], [1, 1], [0, 1], [0, 0], [1, 0], [1, 1], [0, 1]));
 
         // Those two lists, positions and normals, fully describe the "vertices".  What's the "i"th vertex?  Simply the combined
         // data you get if you look up index "i" of both lists above -- a position and a normal vector, together.  Now let's
