@@ -268,8 +268,7 @@ class Body
         return false;                     // Nothing collides with itself.
                                           // Convert sphere b to the frame where a is a unit sphere:
 
-      let model = Mat4.translation(this.center);
-      let inverse = Mat4.inverse(model);
+      let inverse = Mat4.inverse(this.drawn_location);
 
       const T = inverse.times( b.drawn_location, this.temp_matrix );
 
