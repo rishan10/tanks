@@ -213,6 +213,7 @@ class Body
     }
   emplace( location_matrix, linear_velocity, angular_velocity, spin_axis = vec3( 0,0,0 ).randomized(1).normalized() )
     {                               // emplace(): assign the body's initial values, or overwrite them.
+
       this.center   = location_matrix.times( vec4( 0,0,0,1 ) ).to3();
       let translate_point = this.center.times( -1 );
       this.rotation = Mat4.translation( [translate_point[0], translate_point[1], translate_point[2]] ).times( location_matrix );
@@ -366,22 +367,19 @@ class Assignment_Three_Scene extends Scene_Component
                       // scene should do to its bodies every frame -- including applying forces.
                       // Generate additional moving bodies if there ever aren't enough:
       
-      // for( let b of this.bodies )
-      // {                                         // Gravity on Earth, where 1 unit in world space = 1 meter:
-      //   b.linear_velocity[1] += dt * -9.8;
-      //                                           // If about to fall through floor, reverse y velocity:
-      //   if( b.center[1] < -4 && b.linear_velocity[1] < 0 )
-      //     b.linear_velocity[1] *= -.8;
-      // }
+      for( let b of this.bodies )
+      {                                         // Gravity on Earth, where 1 unit in world space = 1 meter:
+        b.linear_velocity[1] += dt * -9.8;
+                                                // If about to fall through floor, reverse y velocity:
+        if( b.center[1] < -4 && b.linear_velocity[1] < 0 )
+          b.linear_velocity[1] *= -.8;
+      }
 
       const collider = this.colliders[ this.collider_selection ];
       for (let a of this.bodies) {
         for( let b of this.bodies )                                      
             {                               // Pass the two bodies and the collision shape to check_if_colliding():
               if( !a.check_if_colliding( b, collider ) ) {
-                a.linear_velocity[1] += dt * -9.8;
-                if( a.center[1] < -4 && a.linear_velocity[1] < 0 )
-                  a.linear_velocity[1] *= -.8;
                 continue;
               }
               a.linear_velocity  = vec3( 0,0,0 );
@@ -445,7 +443,7 @@ class Assignment_Three_Scene extends Scene_Component
     create_wall(graphics_state, model_transform) {
         model_transform = model_transform.times(Mat4.translation([-40,3,0]));
         for(var i = 0; i < 3; i++) {
-            for(var j = 0; j < 10; j++) {
+            for(var j = 0; j < 12; j++) {
 
                 this.bodies.push(new Body(this.shapes.block_texture, this.materials.wall, vec3(4,4,1))
                     .emplace(model_transform, vec3(0,0,0), 0, vec3(0,0,0) ));
@@ -454,7 +452,7 @@ class Assignment_Three_Scene extends Scene_Component
                 //this.shapes.block.draw(graphics_state, model_transform, this.materials.test);
             }
             model_transform = model_transform
-                .times( Mat4.translation([-80, 8,0]));
+                .times( Mat4.translation([-96, 8,0]));
         }
         return model_transform;
 
