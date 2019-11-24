@@ -672,6 +672,7 @@ class Canvas_Widget                    // Canvas_Widget embeds a WebGL demo onto
       control_panels.className = "control-box";
       if( !show_controls ) control_panels.style.display = "none";
       const row = control_panels.insertRow( 0 );
+
       this.canvas_manager = new Canvas_Manager( canvas, Color.of( 0,0.8,1,1 ) );  // Second parameter sets background color.
 
       for( let scene_class_name of scenes )                  // Register the initially requested scenes to the render loop.
