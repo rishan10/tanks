@@ -340,7 +340,7 @@ class Assignment_Three_Scene extends Scene_Component
 
         this.projectiles = [];
         this.model_tank = Mat4.identity();
-        this.power = 5;
+        this.power = 10;
 
                                      // Make some Material objects available to you:
         this.materials =
@@ -390,6 +390,10 @@ class Assignment_Three_Scene extends Scene_Component
               a.linear_velocity  = vec3( 0,0,0 );
               a.angular_velocity = 0;
             }  
+      }
+
+      for (let a of this.projectiles) {
+        a.linear_velocity[1] += dt * -9.8 * Math.sin(this.turret_angle);
       }
                                                // Delete bodies that stop or stray too far away:
       //this.bodies = this.bodies.filter( b => b.center.norm() < 50 && b.linear_velocity.norm() > 2 );
