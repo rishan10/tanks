@@ -340,7 +340,9 @@ class Assignment_Three_Scene extends Scene_Component
 
         this.projectiles = [];
         this.model_tank = Mat4.identity();
-        this.power = 7;
+        this.power = 30;
+        this.brick_mass = 5
+        this.ball_mass = 20
 
                                      // Make some Material objects available to you:
         this.materials =
@@ -366,6 +368,33 @@ class Assignment_Three_Scene extends Scene_Component
           //this.data = new Test_Data();
         this.lights = [ new Light( Vec.of( 5,-10,5,1 ), Color.of( 0, 1, 1, 1 ), 1000 ) ];
       }
+      resolve_collision(brick, projectile) {
+        let collide_angle = Math.atan2(brick.center[1] - projectile.center[1]
+                                        ,brick.center[2] - projectile.center[2])
+        console.log(collide_angle)
+        let speed1 = brick.linear_velocity.length;
+        let speed2 = projectile.linear_velocity.length;
+
+        let direction1 = Math.atan2(brick.linear_velocity[1], brick.linear_velocity[2])
+        let direction2 = Math.atan2(projectile.linear_velocity[1], projectile.linear_velocity[2])
+
+        let new_xspeed_1 = speed1 * Math.cos(direction1 - collide_angle);
+        let new_yspeed_1 = speed1 * Math.sin(direction1 - collide_angle);
+        let new_xspeed_2 = speed2 * Math.cos(direction2 - collide_angle);
+        let new_yspeed_2 = speed2 * Math.sin(direction2 - collide_angle);
+
+        let final_xspeed_1 = ((this.brick_mass - this.ball_mass) * new_xspeed_1 + (this.ball_mass + this.ball_mass) * new_xspeed_2) / (this.brick_mass + this.ball_mass);
+        let final_xspeed_2 = ((this.brick_mass + this.brick_mass) * new_xspeed_1 + (this.ball_mass - this.brick_mass) * new_xspeed_2) / (this.brick_mass + this.ball_mass);
+        let final_yspeed_1 = new_yspeed_1;
+        let final_yspeed_2 = new_yspeed_2;
+
+        let cosAngle = Math.cos(collide_angle);
+        let sinAngle = Math.sin(collide_angle);
+        brick.linear_velocity[2] = cosAngle * final_xspeed_1 - sinAngle * final_yspeed_1;
+        brick.linear_velocity[1] = sinAngle * final_xspeed_1 + cosAngle * final_yspeed_1;
+        projectile.linear_velocity[2] = cosAngle * final_xspeed_2 - sinAngle * final_yspeed_2;
+        projectile.linear_velocity[1] = sinAngle * final_xspeed_2 + cosAngle * final_yspeed_2;
+      }
 
     update_state( dt )
     {                 // update_state():  Override the base time-stepping code to say what this particular
@@ -382,20 +411,25 @@ class Assignment_Three_Scene extends Scene_Component
 
       const collider = this.colliders[ this.collider_selection ];
       for (let a of this.bodies) {
+        //check if the projectile is colliding with a brick
+        for (let p of this.projectiles) {
+          if(!a.check_if_colliding(p, collider)) {
+            continue;
+          }
+          this.resolve_collision(a, p)
+        }
         for( let b of this.bodies )                                      
             {                               // Pass the two bodies and the collision shape to check_if_colliding():
               if( !a.check_if_colliding( b, collider ) ) {
                 continue;
               }
-              a.linear_velocity  = vec3( 0,0,0 );
-              a.angular_velocity = 0;
-            }  
+
+            }
       }
 
       for (let a of this.projectiles) {
         a.linear_velocity[1] += dt * -9.8;
-        
-        console.log(a.center[1])
+
         if(a.center[1] < -9) {
           a.linear_velocity[1] *= -0.7
           a.linear_velocity[2] *= 0.7
