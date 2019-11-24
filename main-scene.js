@@ -312,7 +312,7 @@ class Assignment_Three_Scene extends Scene_Component
         if( !context.globals.has_controls   )
           context.register_scene_component( new Movement_Controls( context, control_box.parentElement.insertCell() ) );
 
-        context.globals.graphics_state.camera_transform = Mat4.look_at( Vec.of( 0,10,20 ), Vec.of( 0,0,0 ), Vec.of( 0,1,0 ) );
+        context.globals.graphics_state.camera_transform = Mat4.look_at( Vec.of( 2.13,54.49,-215.71 ), Vec.of( 0,0,0 ), Vec.of( 0,1,0 ) );
         this.initial_camera_location = Mat4.inverse( context.globals.graphics_state.camera_transform );
 
         const r = context.width/context.height;
