@@ -324,9 +324,7 @@ class Assignment_Three_Scene extends Scene_Component
                          block : new Cube(),
                          square: new Square(),
                          block_texture: new Cube_P(),
-                        ball: new Cube()
-                         
-
+                        ball: new Subdivision_Sphere(4)
                                 // TODO:  Fill in as many additional shape instances as needed in this key/value table.
                                 //        (Requirement 1)
                        }
@@ -413,9 +411,12 @@ class Assignment_Three_Scene extends Scene_Component
         this.update_state( this.dt );
         for( let b of this.bodies )
           b.advance( this.dt );
+
+        for( let p of this.projectiles )
+          p.advance( this.dt );
                                           // Following the advice of the article, de-couple 
                                           // our simulation time from our frame rate:
-        this.t                += Math.sign( frame_time ) * this.dt;
+        this.t += Math.sign( frame_time ) * this.dt;
         this.time_accumulator -= Math.sign( frame_time ) * this.dt;
         this.steps_taken++;
       }
@@ -424,6 +425,7 @@ class Assignment_Three_Scene extends Scene_Component
                                             // two latest states and display the result.
       let alpha = this.time_accumulator / this.dt;
       for( let b of this.bodies ) b.blend_state( alpha );
+      for( let p of this.projectiles ) p.blend_state( alpha );
     }
 
     make_control_panel()            // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
@@ -441,7 +443,7 @@ class Assignment_Three_Scene extends Scene_Component
         this.new_line();
         this.key_triggered_button( "Fire cannon", [ " " ], () => {
           this.projectiles.push(new Body(this.shapes.ball, this.materials.test, vec3(1,1,1))
-              .emplace(this.model_tank, vec3(0,0,0), 0, vec3(0,0,0) ));
+              .emplace(this.model_tank, vec3(0,this.power * Math.sin(this.turret_angle*(Math.PI/180.0)),this.power * Math.cos(this.turret_angle*(Math.PI/180.0))), 0, vec3(0,0,0) ));
         } );
 
       }
@@ -550,9 +552,8 @@ class Assignment_Three_Scene extends Scene_Component
         	b.shape.draw( graphics_state, b.drawn_location, b.material );
         }
 
-        console.log(this.projectiles.length);
+        console.log(this.projectiles);
         for( let p of this.projectiles) {
-          console.log("drawing");
           p.shape.draw(graphics_state, p.drawn_location, p.material);
         }
 
