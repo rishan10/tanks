@@ -423,7 +423,7 @@ class Assignment_Three_Scene extends Scene_Component
               if( !a.check_if_colliding( b, collider ) ) {
                 continue;
               }
-
+              this.resolve_collision(a, b);
             }
       }
 
