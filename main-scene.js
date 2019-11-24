@@ -512,6 +512,9 @@ class Assignment_Three_Scene extends Scene_Component
         this.create_turret(graphics_state, model_tank);
 
 
+
+        // handle wall and ground
+
         let model_transform = Mat4.identity().times(Mat4.scale([4,4,1]));
 
         model_transform = this.create_ground(graphics_state, Mat4.identity());
