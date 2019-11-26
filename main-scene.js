@@ -330,7 +330,8 @@ class Assignment_Three_Scene extends Scene_Component
                        }
 
         this.colliders = [
-          { intersect_test: Body.intersect_cube,   points: new Cube(),  leeway: .1 }
+          { intersect_test: Body.intersect_cube,   points: new Cube(),  leeway: .1 },
+          { intersect_test: Body.intersect_sphere,   points: new Subdivision_Sphere(4),  leeway: .1 }
         ];
         this.collider_selection = 0;
 
@@ -338,11 +339,14 @@ class Assignment_Three_Scene extends Scene_Component
 
         this.turret_angle = 0;
 
+
         this.projectiles = [];
         this.model_tank = Mat4.identity();
         this.power = 30;
-        this.brick_mass = 5
-        this.ball_mass = 20
+        this.brick_mass = 5;
+        this.ball_mass = 20;
+        this.tnkposz = 0;
+        this.c_toggle = false;
 
                                      // Make some Material objects available to you:
         this.materials =
@@ -423,7 +427,8 @@ class Assignment_Three_Scene extends Scene_Component
               if( !a.check_if_colliding( b, collider ) ) {
                 continue;
               }
-              this.resolve_collision(a, b);
+              a.linear_velocity[1] = 0;
+              //this.resolve_collision(a, b);
             }
       }
 
@@ -491,6 +496,17 @@ class Assignment_Three_Scene extends Scene_Component
               .emplace(this.model_tank.times(Mat4.translation([0,2,6])), vec3(0,this.power * Math.sin(this.turret_angle*(Math.PI/180.0)),this.power * Math.cos(this.turret_angle*(Math.PI/180.0))), 0, vec3(0,0,0) ));
         } );
 
+        this.key_triggered_button( "MoveUp", [ "u" ], () => {
+          this.tnkposz += 1;
+        } );
+
+        this.key_triggered_button( "MoveDown", [ "j" ], () => {
+          this.tnkposz -= 1;
+        } );
+
+        this.key_triggered_button( "Switch Camera", [ "c" ], () => {
+          this.c_toggle = !this.c_toggle;
+        } );
       }
 
     create_ground(graphics_state, model_transform) {
@@ -553,13 +569,15 @@ class Assignment_Three_Scene extends Scene_Component
     }
 
     display( graphics_state )
-      { graphics_state.lights = this.lights;        // Use the lights stored in this.lights.
+      { 
+        
+        graphics_state.lights = this.lights;        // Use the lights stored in this.lights.
         const t = graphics_state.animation_time / 1000, dt = graphics_state.animation_delta_time / 1000;
 
         this.simulate( graphics_state.animation_delta_time );
 
         // create 3 tanks
-        this.model_tank = Mat4.identity().times(Mat4.translation([10,-9,-80]));
+        this.model_tank = Mat4.identity().times(Mat4.translation([10,-9,-80 + this.tnkposz]));
 
         this.create_tank(graphics_state, this.model_tank);
         //draw test axis
@@ -602,10 +620,17 @@ class Assignment_Three_Scene extends Scene_Component
           p.shape.draw(graphics_state, p.drawn_location, p.material);
         }
 
-        // TODO:  Fill in matrix operations and drawing code to draw the solar system scene (Requirements 2 and 3)
-
-
-        //model_transform = this.create_wall(graphics_state, model_transform);
+        // taking care of camera :) 
+        let desired = Mat4.identity()
+        if (this.c_toggle) {
+          let mod = this.model_tank.times(Mat4.translation([0,3,12])).times(Mat4.rotation(Math.PI, Vec.of(0,1,0)));
+          desired = Mat4.inverse(mod);
+        } else {
+          desired = Mat4.inverse(this.initial_camera_location);
+        }
+        desired = desired.map( (x,i) => Vec.from( graphics_state.camera_transform[i] ).mix( x, 0.1 ));
+        graphics_state.camera_transform = desired;
+      
 
       }
   }
