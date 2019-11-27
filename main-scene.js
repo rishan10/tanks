@@ -371,6 +371,8 @@ class Assignment_Three_Scene extends Scene_Component
         this.time_accumulator = 0;
           //this.data = new Test_Data();
         this.lights = [ new Light( Vec.of( 5,-10,5,1 ), Color.of( 0, 1, 1, 1 ), 1000 ) ];
+
+        this.blockProjectileMap = {};
       }
       resolve_collision(brick, projectile) {
         let collide_angle = Math.atan2(brick.center[1] - projectile.center[1]
@@ -396,7 +398,7 @@ class Assignment_Three_Scene extends Scene_Component
         let sinAngle = Math.sin(collide_angle);
         brick.linear_velocity[2] = cosAngle * final_xspeed_1 - sinAngle * final_yspeed_1;
         brick.linear_velocity[1] = sinAngle * final_xspeed_1 + cosAngle * final_yspeed_1;
-        projectile.linear_velocity[2] = cosAngle * final_xspeed_2 - sinAngle * final_yspeed_2;
+        projectile.linear_velocity[2] = -cosAngle * final_xspeed_2 + sinAngle * final_yspeed_2;
         projectile.linear_velocity[1] = sinAngle * final_xspeed_2 + cosAngle * final_yspeed_2;
       }
 
@@ -414,13 +416,27 @@ class Assignment_Three_Scene extends Scene_Component
       }
 
       const collider = this.colliders[ this.collider_selection ];
+      var i = 0, j = 0;
       for (let a of this.bodies) {
+        a.linear_velocity[1] = a.linear_velocity[1]/1;
+        a.linear_velocity[2] = a.linear_velocity[2]/1.01;
         //check if the projectile is colliding with a brick
+        j = 0;
         for (let p of this.projectiles) {
+          p.linear_velocity[1] = p.linear_velocity[1]/1;
+          p.linear_velocity[2] = p.linear_velocity[2]/1.001;
           if(!a.check_if_colliding(p, collider)) {
             continue;
+          } 
+          if(!(i in this.blockProjectileMap)){
+            this.resolve_collision(a, p);
+            this.blockProjectileMap[i] = {};
+            this.blockProjectileMap[i][j] = true;
+          } else if(!(j in this.blockProjectileMap[i])){
+            this.resolve_collision(a, p);
+            this.blockProjectileMap[i][j] = true;
           }
-          this.resolve_collision(a, p)
+          j++;
         }
         for( let b of this.bodies )                                      
             {                               // Pass the two bodies and the collision shape to check_if_colliding():
@@ -430,6 +446,7 @@ class Assignment_Three_Scene extends Scene_Component
               a.linear_velocity[1] = 0;
               //this.resolve_collision(a, b);
             }
+        i++;
       }
 
       for (let a of this.projectiles) {
