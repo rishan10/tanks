@@ -396,8 +396,14 @@ class Assignment_Three_Scene extends Scene_Component
 
         let cosAngle = Math.cos(collide_angle);
         let sinAngle = Math.sin(collide_angle);
+        
+        if(final_yspeed_1 > 0){
+          final_yspeed_1 = 0;
+        }
+
         brick.linear_velocity[2] = cosAngle * final_xspeed_1 - sinAngle * final_yspeed_1;
         brick.linear_velocity[1] = sinAngle * final_xspeed_1 + cosAngle * final_yspeed_1;
+        
         projectile.linear_velocity[2] = -cosAngle * final_xspeed_2 + sinAngle * final_yspeed_2;
         projectile.linear_velocity[1] = sinAngle * final_xspeed_2 + cosAngle * final_yspeed_2;
       }
@@ -431,10 +437,10 @@ class Assignment_Three_Scene extends Scene_Component
           if(!(i in this.blockProjectileMap)){
             this.resolve_collision(a, p);
             this.blockProjectileMap[i] = {};
-            this.blockProjectileMap[i][j] = true;
-          } else if(!(j in this.blockProjectileMap[i])){
+            this.blockProjectileMap[i][this.projectiles.length - j] = true;
+          } else if(!((this.projectiles.length - j) in this.blockProjectileMap[i])){
             this.resolve_collision(a, p);
-            this.blockProjectileMap[i][j] = true;
+            this.blockProjectileMap[i][this.projectiles.length - j] = true;
           }
           j++;
         }
