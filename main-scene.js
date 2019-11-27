@@ -419,7 +419,7 @@ class Assignment_Three_Scene extends Scene_Component
       var i = 0, j = 0;
       for (let a of this.bodies) {
         a.linear_velocity[1] = a.linear_velocity[1]/1;
-        a.linear_velocity[2] = a.linear_velocity[2]/1.001;
+        a.linear_velocity[2] = a.linear_velocity[2]/1.01;
         //check if the projectile is colliding with a brick
         j = 0;
         for (let p of this.projectiles) {
