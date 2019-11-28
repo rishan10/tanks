@@ -211,7 +211,7 @@ class Body
     { Object.assign( this, 
              { shape, material, size } )
     }
-  emplace( location_matrix, linear_velocity, angular_velocity, spin_axis = vec3( 0,0,0 ).randomized(1).normalized() )
+  emplace( location_matrix, linear_velocity, angular_velocity, spin_axis = vec3( 1,0,0 ).randomized(1).normalized() )
     {                               // emplace(): assign the body's initial values, or overwrite them.
 
       this.center   = location_matrix.times( vec4( 0,0,0,1 ) ).to3();
@@ -230,7 +230,10 @@ class Body
                                                  // Apply the velocities scaled proportionally to real time (time_amount):
                                                  // Linear velocity first, then angular:
       this.center = this.center.plus( this.linear_velocity.times( time_amount ) );
-      //this.rotation.pre_multiply( Mat4.rotation( time_amount * this.angular_velocity, ...this.spin_axis ) );
+
+      if (this.angular_velocity != 0) {
+        this.rotation.pre_multiply( Mat4.rotation( time_amount * this.angular_velocity, Vec.of(this.spin_axis[0], this.spin_axis[1], this.spin_axis[2]) ) );
+      }
     }
   blend_rotation( alpha )         
     {                        // blend_rotation(): Just naively do a linear blend of the rotations, which looks
@@ -342,7 +345,7 @@ class Assignment_Three_Scene extends Scene_Component
 
         this.projectiles = [];
         this.model_tank = Mat4.identity();
-        this.power = 30;
+        this.power = 100;
         this.brick_mass = 5;
         this.ball_mass = 20;
         this.tnkposz = 0;
@@ -377,7 +380,7 @@ class Assignment_Three_Scene extends Scene_Component
       resolve_collision(brick, projectile) {
         let collide_angle = Math.atan2(brick.center[1] - projectile.center[1]
                                         ,brick.center[2] - projectile.center[2])
-        console.log(collide_angle)
+        //console.log(collide_angle)
         let speed1 = brick.linear_velocity.length;
         let speed2 = projectile.linear_velocity.length;
 
@@ -516,7 +519,7 @@ class Assignment_Three_Scene extends Scene_Component
         this.new_line();
         this.key_triggered_button( "Fire cannon", [ " " ], () => {
           this.projectiles.push(new Body(this.shapes.ball, this.materials.test, vec3(1,1,1))
-              .emplace(this.model_tank.times(Mat4.translation([0,2,6])), vec3(0,this.power * Math.sin(this.turret_angle*(Math.PI/180.0)),this.power * Math.cos(this.turret_angle*(Math.PI/180.0))), 0, vec3(0,0,0) ));
+              .emplace(this.model_tank.times(Mat4.translation([0,2,6])), vec3(0,this.power * Math.sin(this.turret_angle*(Math.PI/180.0)),this.power * Math.cos(this.turret_angle*(Math.PI/180.0))), 0, vec3(1,0,0) ));
         } );
 
         this.key_triggered_button( "MoveUp", [ "u" ], () => {
@@ -548,7 +551,7 @@ class Assignment_Three_Scene extends Scene_Component
             for(var j = 0; j < 12; j++) {
 
                 this.bodies.push(new Body(this.shapes.block_texture, this.materials.wall, vec3(4,4,1))
-                    .emplace(model_transform, vec3(0,0,0), 0, vec3(0,0,0) ));
+                    .emplace(model_transform, vec3(0,0,0), 0, vec3(1,0,0) ));
                 model_transform= model_transform
                     .times( Mat4.translation([8,0,0]))
                 //this.shapes.block.draw(graphics_state, model_transform, this.materials.test);
