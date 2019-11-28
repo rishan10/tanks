@@ -4,7 +4,7 @@ Rishan Girish, 905016242, rishang10@gmail.com,  rishan10
 
 Aseem Sane, 804915018, aseem.adm@gmail.com, aseem191
 
-Andy Zeff, 804994987, apzsfo@gmail.com, apzsfo
+Andrew Zeff, 804994987, apzsfo@gmail.com, apzsfo
 
 Tanks Project Proposal
 
