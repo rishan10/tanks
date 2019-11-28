@@ -538,7 +538,7 @@ class Assignment_Three_Scene extends Scene_Component
 
         this.key_triggered_button( "RotLeft", [ "h" ], () => {
           this.rotate_factor -= Math.PI/180 * 5;
-          this.tnkposz -= 1;
+          this.tnkposz += 1;
         } );
 
         this.key_triggered_button( "Switch Camera", [ "c" ], () => {
@@ -614,7 +614,7 @@ class Assignment_Three_Scene extends Scene_Component
         this.simulate( graphics_state.animation_delta_time );
 
         // create 3 tanks
-        this.model_tank = Mat4.identity().times(Mat4.translation([10,-9,-80 + this.tnkposz]).times(Mat4.rotation(this.rotate_factor, Vec.of(0,1,0))));
+        this.model_tank = Mat4.identity().times(Mat4.translation([10 + this.tnkposz*Math.sin(this.rotate_factor),-9,-80 + this.tnkposz*Math.cos(this.rotate_factor)]).times(Mat4.rotation(this.rotate_factor, Vec.of(0,1,0))));
 
         this.create_tank(graphics_state, this.model_tank);
         //draw test axis
