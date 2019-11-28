@@ -350,6 +350,7 @@ class Assignment_Three_Scene extends Scene_Component
         this.ball_mass = 20;
         this.tnkposz = 0;
         this.c_toggle = false;
+        this.rotate_factor = 0;
 
                                      // Make some Material objects available to you:
         this.materials =
@@ -530,6 +531,16 @@ class Assignment_Three_Scene extends Scene_Component
           this.tnkposz -= 1;
         } );
 
+        this.key_triggered_button( "RotRight", [ "k" ], () => {
+          this.rotate_factor += Math.PI/180 * 5;
+          this.tnkposz +=1;
+        } );
+
+        this.key_triggered_button( "RotLeft", [ "h" ], () => {
+          this.rotate_factor -= Math.PI/180 * 5;
+          this.tnkposz -= 1;
+        } );
+
         this.key_triggered_button( "Switch Camera", [ "c" ], () => {
           this.c_toggle = !this.c_toggle;
         } );
@@ -603,7 +614,7 @@ class Assignment_Three_Scene extends Scene_Component
         this.simulate( graphics_state.animation_delta_time );
 
         // create 3 tanks
-        this.model_tank = Mat4.identity().times(Mat4.translation([10,-9,-80 + this.tnkposz]));
+        this.model_tank = Mat4.identity().times(Mat4.translation([10,-9,-80 + this.tnkposz]).times(Mat4.rotation(this.rotate_factor, Vec.of(0,1,0))));
 
         this.create_tank(graphics_state, this.model_tank);
         //draw test axis
