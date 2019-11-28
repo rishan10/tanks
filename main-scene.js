@@ -520,7 +520,7 @@ class Assignment_Three_Scene extends Scene_Component
         this.new_line();
         this.key_triggered_button( "Fire cannon", [ " " ], () => {
           this.projectiles.push(new Body(this.shapes.ball, this.materials.test, vec3(1,1,1))
-              .emplace(this.model_tank.times(Mat4.translation([0,2,6])), vec3(0,this.power * Math.sin(this.turret_angle*(Math.PI/180.0)),this.power * Math.cos(this.turret_angle*(Math.PI/180.0))), 0, vec3(1,0,0) ));
+              .emplace(this.model_tank.times(Mat4.translation([0,2,6])), vec3(this.power*Math.sin(this.rotate_factor),this.power * Math.sin(this.turret_angle*(Math.PI/180.0))*Math.cos(this.rotate_factor),this.power * Math.cos(this.turret_angle*(Math.PI/180.0))), 0, vec3(1,0,0) ));
         } );
 
         this.key_triggered_button( "MoveUp", [ "u" ], () => {
