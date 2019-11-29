@@ -380,37 +380,8 @@ class Assignment_Three_Scene extends Scene_Component
         this.blockProjectileMap = {};
       }
       resolve_collision(brick, projectile) {
-        let collide_angle = Math.atan2(brick.center[1] - projectile.center[1]
-                                        ,brick.center[2] - projectile.center[2])
-        //console.log(collide_angle)
-        let speed1 = brick.linear_velocity.length;
-        let speed2 = projectile.linear_velocity.length;
-
-        let direction1 = Math.atan2(brick.linear_velocity[1], brick.linear_velocity[2])
-        let direction2 = Math.atan2(projectile.linear_velocity[1], projectile.linear_velocity[2])
-
-        let new_xspeed_1 = speed1 * Math.cos(direction1 - collide_angle);
-        let new_yspeed_1 = speed1 * Math.sin(direction1 - collide_angle);
-        let new_xspeed_2 = speed2 * Math.cos(direction2 - collide_angle);
-        let new_yspeed_2 = speed2 * Math.sin(direction2 - collide_angle);
-
-        let final_xspeed_1 = ((this.brick_mass - this.ball_mass) * new_xspeed_1 + (this.ball_mass + this.ball_mass) * new_xspeed_2) / (this.brick_mass + this.ball_mass);
-        let final_xspeed_2 = ((this.brick_mass + this.brick_mass) * new_xspeed_1 + (this.ball_mass - this.brick_mass) * new_xspeed_2) / (this.brick_mass + this.ball_mass);
-        let final_yspeed_1 = new_yspeed_1;
-        let final_yspeed_2 = new_yspeed_2;
-
-        let cosAngle = Math.cos(collide_angle);
-        let sinAngle = Math.sin(collide_angle);
-
-        if(final_yspeed_1 > 0){
-          final_yspeed_1 = 0;
-        }
-
-        brick.linear_velocity[2] = cosAngle * final_xspeed_1 - sinAngle * final_yspeed_1;
-        brick.linear_velocity[1] = sinAngle * final_xspeed_1 + cosAngle * final_yspeed_1;
-
-        projectile.linear_velocity[2] = -cosAngle * final_xspeed_2 + sinAngle * final_yspeed_2;
-        projectile.linear_velocity[1] = sinAngle * final_xspeed_2 + cosAngle * final_yspeed_2;
+        projectile.linear_velocity[2] *= -0.3
+        projectile.linear_velocity[1] *= -0.3
       }
 
     update_state( dt )
@@ -492,6 +463,8 @@ class Assignment_Three_Scene extends Scene_Component
               }
             }
             this.bodiesInColumns[colNum] = newBodies
+            //resolve collision between ball and body1
+            this.resolve_collision(body1, ball)
           }
         }
       }
