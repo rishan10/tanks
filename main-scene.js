@@ -418,46 +418,79 @@ class Assignment_Three_Scene extends Scene_Component
                       // scene should do to its bodies every frame -- including applying forces.
                       // Generate additional moving bodies if there ever aren't enough:
 
-      for( let b of this.bodies )
-      {                                         // Gravity on Earth, where 1 unit in world space = 1 meter:
-        b.linear_velocity[1] += dt * -9.8;
-                                                // If about to fall through floor, reverse y velocity:
-        if( b.center[1] < -4 && b.linear_velocity[1] < 0 )
-          b.linear_velocity[1] *= -.8;
+      for( let b of this.bodiesInColumns )
+      {
+        for(let body of b) {
+          body.linear_velocity[1] += dt * -9.8;
+                                                  // If about to fall through floor, reverse y velocity:
+          if( body.center[1] < -4 && body.linear_velocity[1] < 0 )
+            body.linear_velocity[1] *= -.8;
+        }                                      // Gravity on Earth, where 1 unit in world space = 1 meter:
+
       }
 
       const collider = this.colliders[ this.collider_selection ];
       var i = 0, j = 0;
-      for (let a of this.bodies) {
-        a.linear_velocity[1] = a.linear_velocity[1]/1;
-        a.linear_velocity[2] = a.linear_velocity[2]/1.01;
-        //check if the projectile is colliding with a brick
-        j = 0;
-        for (let p of this.projectiles) {
-          p.linear_velocity[1] = p.linear_velocity[1]/1;
-          p.linear_velocity[2] = p.linear_velocity[2]/1.001;
-          if(!a.check_if_colliding(p, collider)) {
-            continue;
-          }
-          if(!(i in this.blockProjectileMap)){
-            this.resolve_collision(a, p);
-            this.blockProjectileMap[i] = {};
-            this.blockProjectileMap[i][this.projectiles.length - j] = true;
-          } else if(!((this.projectiles.length - j) in this.blockProjectileMap[i])){
-            this.resolve_collision(a, p);
-            this.blockProjectileMap[i][this.projectiles.length - j] = true;
-          }
-          j++;
-        }
-        for( let b of this.bodies )
-            {                               // Pass the two bodies and the collision shape to check_if_colliding():
-              if( !a.check_if_colliding( b, collider ) ) {
-                continue;
-              }
-              a.linear_velocity[1] = 0;
-              //this.resolve_collision(a, b);
+      // for (let a of this.bodies) {
+      //   a.linear_velocity[1] = a.linear_velocity[1]/1;
+      //   a.linear_velocity[2] = a.linear_velocity[2]/1.01;
+      //   //check if the projectile is colliding with a brick
+      //   j = 0;
+      //   for (let p of this.projectiles) {
+      //     p.linear_velocity[1] = p.linear_velocity[1]/1;
+      //     p.linear_velocity[2] = p.linear_velocity[2]/1.001;
+      //     if(!a.check_if_colliding(p, collider)) {
+      //       continue;
+      //     }
+      //     if(!(i in this.blockProjectileMap)){
+      //       this.resolve_collision(a, p);
+      //       this.blockProjectileMap[i] = {};
+      //       this.blockProjectileMap[i][this.projectiles.length - j] = true;
+      //     } else if(!((this.projectiles.length - j) in this.blockProjectileMap[i])){
+      //       this.resolve_collision(a, p);
+      //       this.blockProjectileMap[i][this.projectiles.length - j] = true;
+      //     }
+      //     j++;
+      //   }
+      //   for( let b of this.bodies )
+      //       {                               // Pass the two bodies and the collision shape to check_if_colliding():
+      //         if( !a.check_if_colliding( b, collider ) ) {
+      //           continue;
+      //         }
+      //         a.linear_velocity[1] = 0;
+      //         //this.resolve_collision(a, b);
+      //       }
+      //   i++;
+      // }
+
+      //check if ball is colliding with a block
+
+      for(let colNum = 0; colNum < this.bodiesInColumns.length; colNum++) {
+        let col1 = this.bodiesInColumns[colNum]
+        for (let bodyNum = 0; bodyNum < col1.length; bodyNum++) {
+          let body1 = col1[bodyNum]
+          for (let body2 of col1) {
+            if(!body1.check_if_colliding(body2, collider)) {
+              continue;
             }
-        i++;
+            body1.linear_velocity[1] = 0
+          }
+
+          for(let ball of this.projectiles) {
+            if(!body1.check_if_colliding(ball, collider)) {
+              continue;
+            }
+
+            //remove the body
+            let newBodies = []
+            for(let body of col1) {
+              if(body != body1) {
+                newBodies.push(body)
+              }
+            }
+            this.bodiesInColumns[colNum] = newBodies
+          }
+        }
       }
 
       for (let a of this.projectiles) {
