@@ -470,10 +470,13 @@ class Assignment_Three_Scene extends Scene_Component
         for (let bodyNum = 0; bodyNum < col1.length; bodyNum++) {
           let body1 = col1[bodyNum]
           for (let body2 of col1) {
+            if(body2 == body1)
+              continue;
             if(!body1.check_if_colliding(body2, collider)) {
               continue;
             }
-            body1.linear_velocity[1] = 0
+            if(body1.center[1] > body2.center[1] && bodyNum != 0)
+              body1.linear_velocity[1] = 0
           }
 
           for(let ball of this.projectiles) {
