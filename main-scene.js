@@ -385,13 +385,15 @@ class Tanks extends Scene_Component
 
         brick.linear_velocity[2] = cosAngle * final_xspeed_1 - sinAngle * final_yspeed_1;
         brick.linear_velocity[1] = sinAngle * final_xspeed_1 + cosAngle * final_yspeed_1;
+        brick.linear_velocity[0] = projectile.linear_velocity[0] / 10;
 
         if(brick.linear_velocity[2] < 0){
           brick.linear_velocity[2] *= -1;
         }
         
-        projectile.linear_velocity[2] = -cosAngle * final_xspeed_2 + sinAngle * final_yspeed_2;
+        projectile.linear_velocity[2] = -cosAngle * final_xspeed_2 + sinAngle * final_yspeed_2 - 10;
         projectile.linear_velocity[1] = sinAngle * final_xspeed_2 + cosAngle * final_yspeed_2;
+        projectile.linear_velocity[0] = 0;
       }
 
     update_state( dt )
@@ -491,6 +493,13 @@ class Tanks extends Scene_Component
       for (let bodyNum = 0; bodyNum < this.freeBodies.length; bodyNum++) {
         let body1 = this.freeBodies[bodyNum]
         body1.linear_velocity[2] /= 1.002;
+        body1.linear_velocity[0] /= 1.002;
+
+        if(body1.linear_velocity[2] < 2){
+          this.freeBodies.splice(bodyNum, 1);
+          bodyNum--;
+          continue;
+        }
 
         for(let ball of this.projectiles) {
           if(!body1.check_if_colliding(ball, collider)) {
