@@ -514,22 +514,24 @@ class Tanks extends Scene_Component
               .emplace(this.model_tank.times(Mat4.translation([0,2,6])), vec3(this.power*Math.sin(this.rotate_factor),this.power * Math.sin(this.turret_angle*(Math.PI/180.0))*Math.cos(this.rotate_factor),this.power * Math.cos(this.turret_angle*(Math.PI/180.0))), 0, vec3(1,0,0) ));
         } );
 
-        this.key_triggered_button( "MoveUp", [ "u" ], () => {
-          this.tnkposz += 1;
-        } );
+        // this.key_triggered_button( "MoveUp", [ "u" ], () => {
+        //   this.tnkposz += 1;
+        // } );
 
-        this.key_triggered_button( "MoveDown", [ "j" ], () => {
-          this.tnkposz -= 1;
-        } );
-        this.new_line();
+        // this.key_triggered_button( "MoveDown", [ "j" ], () => {
+        //   this.tnkposz -= 1;
+        // } );
+        // this.new_line();
 
         this.key_triggered_button( "RotRight", [ "k" ], () => {
-          this.rotate_factor += Math.PI/180 * 5;
+          if (this.rotate_factor < Math.PI/3)
+            this.rotate_factor += Math.PI/180 * 5;
           //this.tnkposz +=1;
         } );
 
         this.key_triggered_button( "RotLeft", [ "h" ], () => {
-          this.rotate_factor -= Math.PI/180 * 5;
+          if (this.rotate_factor > -Math.PI/3)
+            this.rotate_factor -= Math.PI/180 * 5;
           //this.tnkposz += 1;
         } );
         this.new_line();
@@ -608,13 +610,14 @@ class Tanks extends Scene_Component
         this.simulate( graphics_state.animation_delta_time );
 
         // create 3 tanks
-        this.model_tank = Mat4.translation([10 - 4.75,-9,-80 + this.tnkposz]).times(Mat4.rotation(this.rotate_factor, Vec.of(0,1,0))).times(Mat4.translation([4.75, 0, 0]));
+        this.model_tank = Mat4.translation([10 - 4.75,-9,-80])//.times(Mat4.rotation(this.rotate_factor, Vec.of(0,1,0))).times(Mat4.translation([4.75, 0, 0]));
 
         this.create_tank(graphics_state, this.model_tank);
         //draw test axis
         // this.shapes.ball.draw(graphics_state, model_tank.times(Mat4.translation([0,3,-3 ])), this.materials.test);
         this.model_tank = this.model_tank.times(Mat4.translation([0, 3, -3]))
             .times( Mat4.rotation(this.turret_angle * (Math.PI / 180.0), Vec.of(-1,0,0)) )
+            .times(Mat4.rotation(this.rotate_factor, Vec.of(0,1,0)))
             .times(Mat4.translation([0, -3, 3]));
         this.create_turret(graphics_state, this.model_tank);
 
