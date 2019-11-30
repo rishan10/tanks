@@ -385,6 +385,10 @@ class Tanks extends Scene_Component
 
         brick.linear_velocity[2] = cosAngle * final_xspeed_1 - sinAngle * final_yspeed_1;
         brick.linear_velocity[1] = sinAngle * final_xspeed_1 + cosAngle * final_yspeed_1;
+
+        if(brick.linear_velocity[2] < 0){
+          brick.linear_velocity[2] *= -1;
+        }
         
         projectile.linear_velocity[2] = -cosAngle * final_xspeed_2 + sinAngle * final_yspeed_2;
         projectile.linear_velocity[1] = sinAngle * final_xspeed_2 + cosAngle * final_yspeed_2;
@@ -474,7 +478,7 @@ class Tanks extends Scene_Component
               if(body != body1) {
                 newBodies.push(body)
               } else {
-                this.freeBodies.push(body)
+                //this.freeBodies.push(body)
               }
             }
             this.bodiesInColumns[colNum] = newBodies
@@ -601,11 +605,11 @@ class Tanks extends Scene_Component
       }
 
     create_ground(graphics_state, model_transform) {
-        model_transform = model_transform.times( Mat4.translation( [0,-10,0] )).times( Mat4.rotation( Math.PI/2,   Vec.of(1,0,0) ) ).times( Mat4.scale( [100,100,1] ) );
+        model_transform = model_transform.times( Mat4.translation( [0,-10,0] )).times( Mat4.rotation( Math.PI/2,   Vec.of(1,0,0) ) ).times( Mat4.scale( [150,200,1] ) );
 
         this.shapes.square.draw( graphics_state,  model_transform ,
             this.materials.ground);
-        model_transform = model_transform.times(Mat4.scale([1/100, 1/100,1])).times(Mat4.rotation(Math.PI/2, Vec.of(-1,0,0)))
+        model_transform = model_transform.times(Mat4.scale([1/150, 1/200,1])).times(Mat4.rotation(Math.PI/2, Vec.of(-1,0,0)))
         model_transform = model_transform.times(Mat4.translation([0,1,0]))
         return model_transform;
     }
