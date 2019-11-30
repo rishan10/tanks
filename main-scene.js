@@ -348,7 +348,7 @@ class Assignment_Three_Scene extends Scene_Component
         this.power = 40;
         this.brick_mass = 5;
         this.ball_mass = 20;
-        this.tnkposz = 0;
+        //this.tnkposz = 0;
         this.c_toggle = false;
         this.rotate_factor = 0;
 
@@ -539,22 +539,22 @@ class Assignment_Three_Scene extends Scene_Component
               .emplace(this.model_tank.times(Mat4.translation([0,2,6])), vec3(this.power*Math.sin(this.rotate_factor),this.power * Math.sin(this.turret_angle*(Math.PI/180.0))*Math.cos(this.rotate_factor),this.power * Math.cos(this.turret_angle*(Math.PI/180.0))), 0, vec3(1,0,0) ));
         } );
 
-        this.key_triggered_button( "MoveUp", [ "u" ], () => {
-          this.tnkposz += 1;
-        } );
+        // this.key_triggered_button( "MoveUp", [ "u" ], () => {
+        //   //this.tnkposz += 1;
+        // } );
 
-        this.key_triggered_button( "MoveDown", [ "j" ], () => {
-          this.tnkposz -= 1;
-        } );
+        // this.key_triggered_button( "MoveDown", [ "j" ], () => {
+        //   //this.tnkposz -= 1;
+        // } );
 
         this.key_triggered_button( "RotRight", [ "k" ], () => {
           this.rotate_factor += Math.PI/180 * 5;
-          this.tnkposz +=1;
+          //this.tnkposz +=1;
         } );
 
         this.key_triggered_button( "RotLeft", [ "h" ], () => {
           this.rotate_factor -= Math.PI/180 * 5;
-          this.tnkposz += 1;
+          //this.tnkposz += 1;
         } );
 
         this.key_triggered_button( "Switch Camera", [ "c" ], () => {
@@ -632,7 +632,7 @@ class Assignment_Three_Scene extends Scene_Component
         this.simulate( graphics_state.animation_delta_time );
 
         // create 3 tanks
-        this.model_tank = Mat4.identity().times(Mat4.translation([10 + this.tnkposz*Math.sin(this.rotate_factor),-9,-80 + this.tnkposz*Math.cos(this.rotate_factor)]).times(Mat4.rotation(this.rotate_factor, Vec.of(0,1,0))));
+        this.model_tank = Mat4.identity().times(Mat4.translation([10 + Math.sin(this.rotate_factor) - 4.75,-9,-80 + Math.cos(this.rotate_factor)]).times(Mat4.rotation(this.rotate_factor, Vec.of(0,1,0)))).times(Mat4.translation([4.75, 0, 0]));
 
         this.create_tank(graphics_state, this.model_tank);
         //draw test axis
@@ -682,15 +682,15 @@ class Assignment_Three_Scene extends Scene_Component
         }
 
         // taking care of camera :)
-        // let desired = Mat4.identity()
-        // if (this.c_toggle) {
-        //   let mod = this.model_tank.times(Mat4.translation([0,3,12])).times(Mat4.rotation(Math.PI, Vec.of(0,1,0)));
-        //   desired = Mat4.inverse(mod);
-        // } else {
-        //   desired = Mat4.inverse(this.initial_camera_location);
-        // }
-        // desired = desired.map( (x,i) => Vec.from( graphics_state.camera_transform[i] ).mix( x, 0.1 ));
-        // graphics_state.camera_transform = desired;
+        let desired = Mat4.identity()
+        if (this.c_toggle) {
+          let mod = this.model_tank.times(Mat4.translation([0,4,12])).times(Mat4.rotation(Math.PI, Vec.of(0,1,0)));
+          desired = Mat4.inverse(mod);
+        } else {
+          desired = Mat4.inverse(this.initial_camera_location);
+        }
+        desired = desired.map( (x,i) => Vec.from( graphics_state.camera_transform[i] ).mix( x, 0.1 ));
+        graphics_state.camera_transform = desired;
 
 
       }
