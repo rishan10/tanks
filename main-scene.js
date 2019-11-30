@@ -385,10 +385,15 @@ class Tanks extends Scene_Component
 
         brick.linear_velocity[2] = cosAngle * final_xspeed_1 - sinAngle * final_yspeed_1;
         brick.linear_velocity[1] = sinAngle * final_xspeed_1 + cosAngle * final_yspeed_1;
-        brick.linear_velocity[0] = projectile.linear_velocity[0] / 10;
+        brick.linear_velocity[0] = projectile.linear_velocity[0] / 15;
+        brick.angular_velocity = collide_angle / 2;
 
         if(brick.linear_velocity[2] < 0){
           brick.linear_velocity[2] *= -1;
+        }
+        if(brick.bottom_brick){
+          brick.linear_velocity[2] /= 1.2;
+          brick.angular_velocity = 0;
         }
         
         projectile.linear_velocity[2] = -cosAngle * final_xspeed_2 + sinAngle * final_yspeed_2 - 10;
@@ -480,7 +485,11 @@ class Tanks extends Scene_Component
               if(body != body1) {
                 newBodies.push(body)
               } else {
-                //this.freeBodies.push(body)
+                if(bodyNum == 0)
+                  body.bottom_brick = true;
+                else
+                  body.bottom_brick = false;
+                this.freeBodies.push(body)
               }
             }
             this.bodiesInColumns[colNum] = newBodies
@@ -492,10 +501,11 @@ class Tanks extends Scene_Component
 
       for (let bodyNum = 0; bodyNum < this.freeBodies.length; bodyNum++) {
         let body1 = this.freeBodies[bodyNum]
-        body1.linear_velocity[2] /= 1.002;
+        body1.linear_velocity[2] /= 1.004;
         body1.linear_velocity[0] /= 1.002;
+        body1.angular_velocity /= 1.01;
 
-        if(body1.linear_velocity[2] < 2){
+        if(body1.linear_velocity[2] < 2 && body1.linear_velocity[0] < 1){
           this.freeBodies.splice(bodyNum, 1);
           bodyNum--;
           continue;
