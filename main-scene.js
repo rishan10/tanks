@@ -286,32 +286,8 @@ class Body
     }
 }
 
-class Test_Data
-{                             // **Test_Data** pre-loads some Shapes and Textures that other Scenes can borrow.
-  constructor()
-  { this.textures = {
-    ground : new Texture( "asset/ground.png" ),
-
-  }
-    // this.shapes = { donut  : new defs.Torus          ( 15, 15, [[0,2],[0,1]] ),
-    //   cone   : new defs.Closed_Cone    ( 4, 10,  [[0,2],[0,1]] ),
-    //   capped : new defs.Capped_Cylinder( 4, 12,  [[0,2],[0,1]] ),
-    //   ball   : new defs.Subdivision_Sphere( 3,   [[0,1],[0,1]] ),
-    //   cube   : new defs.Cube(),
-    //   prism  : new ( defs.Capped_Cylinder   .prototype.make_flat_shaded_version() )( 10, 10, [[0,2],[0,1]] ),
-    //   gem    : new ( defs.Subdivision_Sphere.prototype.make_flat_shaded_version() )( 2 ),
-    //   donut2 : new ( defs.Torus             .prototype.make_flat_shaded_version() )( 20, 20, [[0,2],[0,1]] ),
-    // };
-  }
-  random_shape( shape_list = this.shapes )
-  {                                       // random_shape():  Extract a random shape from this.shapes.
-    const shape_names = Object.keys( shape_list );
-    return shape_list[ shape_names[ ~~( shape_names.length * Math.random() ) ] ]
-  }
-}
-
-window.Assignment_Three_Scene = window.classes.Assignment_Three_Scene =
-class Assignment_Three_Scene extends Scene_Component
+window.Tanks = window.classes.Tanks =
+class Tanks extends Scene_Component
   { constructor( context, control_box )     // The scene begins by requesting the camera, shapes, and materials it will need.
       { super(   context, control_box );    // First, include a secondary Scene that provides movement controls:
         if( !context.globals.has_controls   )
@@ -327,7 +303,7 @@ class Assignment_Three_Scene extends Scene_Component
                          block : new Cube(),
                          square: new Square(),
                          block_texture: new Cube_P(),
-                        ball: new Subdivision_Sphere(4)
+                         ball: new Subdivision_Sphere(4)
                                 // TODO:  Fill in as many additional shape instances as needed in this key/value table.
                                 //        (Requirement 1)
                        }
@@ -348,7 +324,7 @@ class Assignment_Three_Scene extends Scene_Component
         this.power = 40;
         this.brick_mass = 5;
         this.ball_mass = 20;
-        //this.tnkposz = 0;
+        this.tnkposz = 0;
         this.c_toggle = false;
         this.rotate_factor = 0;
 
@@ -374,7 +350,6 @@ class Assignment_Three_Scene extends Scene_Component
         this.added = false;
         this.time_scale = 1;
         this.time_accumulator = 0;
-          //this.data = new Test_Data();
         this.lights = [ new Light( Vec.of( 5,-10,5,1 ), Color.of( 0, 1, 1, 1 ), 1000 ) ];
 
         this.blockProjectileMap = {};
@@ -539,13 +514,14 @@ class Assignment_Three_Scene extends Scene_Component
               .emplace(this.model_tank.times(Mat4.translation([0,2,6])), vec3(this.power*Math.sin(this.rotate_factor),this.power * Math.sin(this.turret_angle*(Math.PI/180.0))*Math.cos(this.rotate_factor),this.power * Math.cos(this.turret_angle*(Math.PI/180.0))), 0, vec3(1,0,0) ));
         } );
 
-        // this.key_triggered_button( "MoveUp", [ "u" ], () => {
-        //   //this.tnkposz += 1;
-        // } );
+        this.key_triggered_button( "MoveUp", [ "u" ], () => {
+          this.tnkposz += 1;
+        } );
 
-        // this.key_triggered_button( "MoveDown", [ "j" ], () => {
-        //   //this.tnkposz -= 1;
-        // } );
+        this.key_triggered_button( "MoveDown", [ "j" ], () => {
+          this.tnkposz -= 1;
+        } );
+        this.new_line();
 
         this.key_triggered_button( "RotRight", [ "k" ], () => {
           this.rotate_factor += Math.PI/180 * 5;
@@ -556,7 +532,7 @@ class Assignment_Three_Scene extends Scene_Component
           this.rotate_factor -= Math.PI/180 * 5;
           //this.tnkposz += 1;
         } );
-
+        this.new_line();
         this.key_triggered_button( "Switch Camera", [ "c" ], () => {
           this.c_toggle = !this.c_toggle;
         } );
@@ -632,7 +608,7 @@ class Assignment_Three_Scene extends Scene_Component
         this.simulate( graphics_state.animation_delta_time );
 
         // create 3 tanks
-        this.model_tank = Mat4.identity().times(Mat4.translation([10 + Math.sin(this.rotate_factor) - 4.75,-9,-80 + Math.cos(this.rotate_factor)]).times(Mat4.rotation(this.rotate_factor, Vec.of(0,1,0)))).times(Mat4.translation([4.75, 0, 0]));
+        this.model_tank = Mat4.translation([10 - 4.75,-9,-80 + this.tnkposz]).times(Mat4.rotation(this.rotate_factor, Vec.of(0,1,0))).times(Mat4.translation([4.75, 0, 0]));
 
         this.create_tank(graphics_state, this.model_tank);
         //draw test axis
