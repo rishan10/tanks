@@ -344,6 +344,8 @@ class Tanks extends Scene_Component
 
         this.bodies = []
         this.bodiesInColumns = []
+        this.freeBodies = []
+        this.freeBodiesHit = {}
         this.dt = 1/20;
         this.steps_taken = 0;
         this.t = 0;
@@ -355,8 +357,41 @@ class Tanks extends Scene_Component
         this.blockProjectileMap = {};
       }
       resolve_collision(brick, projectile) {
-        projectile.linear_velocity[2] *= -0.3
-        projectile.linear_velocity[1] *= -0.3
+        let collide_angle = Math.atan2(brick.center[1] - projectile.center[1]
+                                        ,brick.center[2] - projectile.center[2])
+        //console.log(collide_angle)
+        let speed1 = brick.linear_velocity.length;
+        let speed2 = projectile.linear_velocity.length;
+
+        let direction1 = Math.atan2(brick.linear_velocity[1], brick.linear_velocity[2])
+        let direction2 = Math.atan2(projectile.linear_velocity[1], projectile.linear_velocity[2])
+
+        let new_xspeed_1 = speed1 * Math.cos(direction1 - collide_angle);
+        let new_yspeed_1 = speed1 * Math.sin(direction1 - collide_angle);
+        let new_xspeed_2 = speed2 * Math.cos(direction2 - collide_angle);
+        let new_yspeed_2 = speed2 * Math.sin(direction2 - collide_angle);
+
+        let final_xspeed_1 = ((this.brick_mass - this.ball_mass) * new_xspeed_1 + (this.ball_mass + this.ball_mass) * new_xspeed_2) / (this.brick_mass + this.ball_mass);
+        let final_xspeed_2 = ((this.brick_mass + this.brick_mass) * new_xspeed_1 + (this.ball_mass - this.brick_mass) * new_xspeed_2) / (this.brick_mass + this.ball_mass);
+        let final_yspeed_1 = new_yspeed_1;
+        let final_yspeed_2 = new_yspeed_2;
+
+        let cosAngle = Math.cos(collide_angle);
+        let sinAngle = Math.sin(collide_angle);
+        
+        if(final_yspeed_1 > 0){
+          final_yspeed_1 = 0;
+        }
+
+        brick.linear_velocity[2] = cosAngle * final_xspeed_1 - sinAngle * final_yspeed_1;
+        brick.linear_velocity[1] = sinAngle * final_xspeed_1 + cosAngle * final_yspeed_1;
+
+        if(brick.linear_velocity[2] < 0){
+          brick.linear_velocity[2] *= -1;
+        }
+        
+        projectile.linear_velocity[2] = -cosAngle * final_xspeed_2 + sinAngle * final_yspeed_2;
+        projectile.linear_velocity[1] = sinAngle * final_xspeed_2 + cosAngle * final_yspeed_2;
       }
 
     update_state( dt )
@@ -374,6 +409,13 @@ class Tanks extends Scene_Component
         }                                      // Gravity on Earth, where 1 unit in world space = 1 meter:
 
       }
+      
+      for(let body of this.freeBodies) {
+        body.linear_velocity[1] += dt * -9.8;
+                                                // If about to fall through floor, reverse y velocity:
+        if( body.center[1] < -4 && body.linear_velocity[1] < 0 )
+          body.linear_velocity[1] *= -.8;
+      }                                      // Gravity on Earth, where 1 unit in world space = 1 meter:
 
       const collider = this.colliders[ this.collider_selection ];
       var i = 0, j = 0;
@@ -430,15 +472,34 @@ class Tanks extends Scene_Component
               continue;
             }
 
-            //remove the body
+            //remove the body from column
             let newBodies = []
             for(let body of col1) {
               if(body != body1) {
                 newBodies.push(body)
+              } else {
+                //this.freeBodies.push(body)
               }
             }
             this.bodiesInColumns[colNum] = newBodies
             //resolve collision between ball and body1
+            this.resolve_collision(body1, ball)
+          }
+        }
+      }
+
+      for (let bodyNum = 0; bodyNum < this.freeBodies.length; bodyNum++) {
+        let body1 = this.freeBodies[bodyNum]
+        body1.linear_velocity[2] /= 1.002;
+
+        for(let ball of this.projectiles) {
+          if(!body1.check_if_colliding(ball, collider)) {
+            continue;
+          }
+          
+          //resolve collision between ball and body1
+          if(this.freeBodies.length - bodyNum in this.freeBodiesHit){
+            this.freeBodiesHit[this.freeBodies.length - bodyNum] = true;
             this.resolve_collision(body1, ball)
           }
         }
@@ -477,6 +538,10 @@ class Tanks extends Scene_Component
           }
         }
 
+        for(let body of this.freeBodies) {
+          body.advance(this.dt)
+        }
+
         for( let p of this.projectiles )
           p.advance( this.dt );
                                           // Following the advice of the article, de-couple
@@ -492,6 +557,7 @@ class Tanks extends Scene_Component
       for(let bodies of this.bodiesInColumns) {
         for( let b of bodies ) b.blend_state( alpha );
       }
+      for( let b of this.freeBodies ) b.blend_state( alpha );
 
       for( let p of this.projectiles ) p.blend_state( alpha );
     }
@@ -541,11 +607,11 @@ class Tanks extends Scene_Component
       }
 
     create_ground(graphics_state, model_transform) {
-        model_transform = model_transform.times( Mat4.translation( [0,-10,0] )).times( Mat4.rotation( Math.PI/2,   Vec.of(1,0,0) ) ).times( Mat4.scale( [100,100,1] ) );
+        model_transform = model_transform.times( Mat4.translation( [0,-10,0] )).times( Mat4.rotation( Math.PI/2,   Vec.of(1,0,0) ) ).times( Mat4.scale( [150,200,1] ) );
 
         this.shapes.square.draw( graphics_state,  model_transform ,
             this.materials.ground);
-        model_transform = model_transform.times(Mat4.scale([1/100, 1/100,1])).times(Mat4.rotation(Math.PI/2, Vec.of(-1,0,0)))
+        model_transform = model_transform.times(Mat4.scale([1/150, 1/200,1])).times(Mat4.rotation(Math.PI/2, Vec.of(-1,0,0)))
         model_transform = model_transform.times(Mat4.translation([0,1,0]))
         return model_transform;
     }
@@ -653,6 +719,9 @@ class Tanks extends Scene_Component
           for(let body of bodies) {
             body.shape.draw(graphics_state, body.drawn_location, body.material)
           }
+        }
+        for(let body of this.freeBodies) {
+          body.shape.draw(graphics_state, body.drawn_location, body.material)
         }
 
         // console.log(this.projectiles);
