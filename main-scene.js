@@ -335,6 +335,7 @@ class Tanks extends Scene_Component
                                      // Make some Material objects available to you:
         this.materials =
           {   test:     context.get_instance( Phong_Shader ).material( Color.of( 0,0,1,1 ), { ambient:1 } ),
+              final: context.get_instance(Phong_Shader).material(Color.of(1,0,0,1), {ambient:1}),
               tankBody:     context.get_instance( Phong_Shader ).material( Color.of( 0.5,0.7,0.4,1 ), { ambient:0.4 } ),
               tankTreads:     context.get_instance( Phong_Shader ).material( Color.of( 0.2,0.2,0,1 ), { ambient:0.4 } ),
               turretBody:     context.get_instance( Phong_Shader ).material( Color.of( 0.3,0.5,0.2,1 ), { ambient:0.4 } ),
@@ -557,8 +558,14 @@ class Tanks extends Scene_Component
         this.new_line();
         this.key_triggered_button( "Fire cannon", [ " " ], () => {
           this.total_ammo -= 1;
-          this.projectiles.push(new Body(this.shapes.ball, this.materials.test, vec3(1,1,1))
+          if(this.total_ammo != 2){
+            this.projectiles.push(new Body(this.shapes.ball, this.materials.test, vec3(1,1,1))
               .emplace(this.model_tank.times(Mat4.translation([0,2,6])), vec3(this.power*Math.sin(this.rotate_factor),this.power * Math.sin(this.turret_angle*(Math.PI/180.0))*Math.cos(this.rotate_factor),this.power * Math.cos(this.turret_angle*(Math.PI/180.0))), 0, vec3(1,0,0) ));
+          }   
+          else {
+            this.projectiles.push(new Body(this.shapes.ball, this.materials.final, vec3(1,1,1))
+              .emplace(this.model_tank.times(Mat4.translation([0,2,6])), vec3(this.power*Math.sin(this.rotate_factor),this.power * Math.sin(this.turret_angle*(Math.PI/180.0))*Math.cos(this.rotate_factor),this.power * Math.cos(this.turret_angle*(Math.PI/180.0))), 0, vec3(1,0,0) ));
+          }
         } );
 
         // this.key_triggered_button( "MoveUp", [ "u" ], () => {
