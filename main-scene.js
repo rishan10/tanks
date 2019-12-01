@@ -397,7 +397,7 @@ class Tanks extends Scene_Component
         
         projectile.linear_velocity[2] = -cosAngle * final_xspeed_2 + sinAngle * final_yspeed_2 - 10;
         projectile.linear_velocity[1] = sinAngle * final_xspeed_2 + cosAngle * final_yspeed_2;
-        projectile.linear_velocity[0] = 0;
+        projectile.linear_velocity[0] /= 1.5;
       }
 
     update_state( dt )
