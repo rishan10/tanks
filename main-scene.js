@@ -553,6 +553,7 @@ class Tanks extends Scene_Component
         } );
         this.new_line();
         this.key_triggered_button( "Fire cannon", [ " " ], () => {
+          this.total_ammo -= 1;
           this.projectiles.push(new Body(this.shapes.ball, this.materials.test, vec3(1,1,1))
               .emplace(this.model_tank.times(Mat4.translation([0,2,6])), vec3(this.power*Math.sin(this.rotate_factor),this.power * Math.sin(this.turret_angle*(Math.PI/180.0))*Math.cos(this.rotate_factor),this.power * Math.cos(this.turret_angle*(Math.PI/180.0))), 0, vec3(1,0,0) ));
         } );
@@ -715,6 +716,11 @@ class Tanks extends Scene_Component
 
         this.simulate( graphics_state.animation_delta_time );
 
+        if (this.total_ammo == 0) {
+          this.reset = true;
+          this.total_ammo = 40;
+          return;
+        }
         // create 3 tanks
         this.model_tank = Mat4.translation([10 - 4.75,-9,-80])//.times(Mat4.rotation(this.rotate_factor, Vec.of(0,1,0))).times(Mat4.translation([4.75, 0, 0]));
 
@@ -762,6 +768,7 @@ class Tanks extends Scene_Component
         if (this.isempty()) {
           this.reset = true;
           this.level += 1;
+          this.total_ammo = 40 + 5*(this.level-1);
           
         }
 
