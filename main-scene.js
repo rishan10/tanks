@@ -303,7 +303,8 @@ class Tanks extends Scene_Component
                          block : new Cube(),
                          square: new Square(),
                          block_texture: new Cube_P(),
-                         ball: new Subdivision_Sphere(4)
+                         ball: new Subdivision_Sphere(4),
+                         sun: new Subdivision_Sphere(4)
                                 // TODO:  Fill in as many additional shape instances as needed in this key/value table.
                                 //        (Requirement 1)
                        }
@@ -338,7 +339,8 @@ class Tanks extends Scene_Component
               tankTreads:     context.get_instance( Phong_Shader ).material( Color.of( 0.2,0.2,0,1 ), { ambient:0.4 } ),
               turretBody:     context.get_instance( Phong_Shader ).material( Color.of( 0.3,0.5,0.2,1 ), { ambient:0.4 } ),
               ground: context.get_instance( Phong_Shader ).material(Color.of(0,0,0,1), {ambient: 1, texture: context.get_instance("assets/groundhigherres.jpg", false)}),
-              wall: context.get_instance( Phong_Shader ).material(Color.of(0,0,0,1), {ambient: 1, texture: context.get_instance("assets/brick.png", false)})
+              wall: context.get_instance( Phong_Shader ).material(Color.of(0,0,0,1), {ambient: 1, texture: context.get_instance("assets/brick.png", false)}),
+              sun:      context.get_instance(Phong_Shader  ).material( Color.of( 249/255,215/255,28/255,1 ), { ambient:0.9   } )
             //ring:     context.get_instance( Ring_Shader  ).material()
 
                                 // TODO:  Fill in as many additional material objects as needed in this key/value table.
@@ -354,6 +356,7 @@ class Tanks extends Scene_Component
         this.time_scale = 1;
         this.time_accumulator = 0;
         this.lights = [ new Light( Vec.of( 5,-10,5,1 ), Color.of( 0, 1, 1, 1 ), 1000 ) ];
+        
 
       }
       resolve_collision(brick, projectile) {
@@ -709,10 +712,16 @@ class Tanks extends Scene_Component
 
     display( graphics_state )
       {
-
-
         graphics_state.lights = this.lights;        // Use the lights stored in this.lights.
+        
+
         const t = graphics_state.animation_time / 1000, dt = graphics_state.animation_delta_time / 1000;
+        let sunRadius = 10;
+        let sunColor = Color.of(249/255, 215/255, 28/255);
+        let sunScale = Mat4.identity().times(Mat4.scale([sunRadius, sunRadius, sunRadius]));
+        sunScale = sunScale.times(Mat4.translation(Vec.of(-10,5,10)));
+        graphics_state.lights = [ new Light( Vec.of(-10,10,-10,1), sunColor, 10**sunRadius) ];
+        this.shapes.sun.draw(graphics_state, sunScale, this.materials.sun);
 
         this.simulate( graphics_state.animation_delta_time );
 
