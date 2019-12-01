@@ -329,6 +329,7 @@ class Tanks extends Scene_Component
         this.reset = true;
         this.rotate_factor = 0;
         this.level = 0;
+        this.total_ammo = 40;
 
                                      // Make some Material objects available to you:
         this.materials =
@@ -344,7 +345,6 @@ class Tanks extends Scene_Component
                                 //        (Requirement 1)
           }
 
-        this.bodies = []
         this.bodiesInColumns = []
         this.freeBodies = []
         this.freeBodiesHit = {}
@@ -568,6 +568,7 @@ class Tanks extends Scene_Component
 
         this.key_triggered_button( "Restart", [ "r" ], () => {
           this.reset = true;
+          this.level = 0;
         } );
 
         this.key_triggered_button( "RotRight", [ "a" ], () => {
@@ -624,6 +625,13 @@ class Tanks extends Scene_Component
 
     }
 
+    isempty(){
+      for (let col of this.bodiesInColumns) {
+        if (col.length != 0) 
+          return false;
+      }
+      return true;
+    }
 
     create_tank(graphics_state, model_transform) {
         let orig_transform = model_transform;
@@ -694,10 +702,10 @@ class Tanks extends Scene_Component
 
         model_transform = this.create_ground(graphics_state, Mat4.identity());
         if(this.reset) {
-          this.bodies = []
           this.bodiesInColumns = []
           this.freeBodies = []
           this.freeBodiesHit = {}
+          this.projectiles = []
           if (this.level <= 2) {
             model_transform = this.create_wall1_2(graphics_state, model_transform);
           }
@@ -705,6 +713,11 @@ class Tanks extends Scene_Component
           this.reset = false;
         }
 
+        if (this.isempty()) {
+          this.reset = true;
+          this.level += 1;
+          
+        }
 
         // for( let b of this.bodies ) {
         // 	b.shape.draw( graphics_state, b.drawn_location, b.material );
@@ -723,6 +736,7 @@ class Tanks extends Scene_Component
         for( let p of this.projectiles) {
           p.shape.draw(graphics_state, p.drawn_location, p.material);
         }
+
 
         // taking care of camera :)
         let desired = Mat4.identity()
