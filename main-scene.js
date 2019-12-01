@@ -328,6 +328,7 @@ class Tanks extends Scene_Component
         this.c_toggle = false;
         this.reset = true;
         this.rotate_factor = 0;
+        this.level = 0;
 
                                      // Make some Material objects available to you:
         this.materials =
@@ -350,7 +351,6 @@ class Tanks extends Scene_Component
         this.dt = 1/20;
         this.steps_taken = 0;
         this.t = 0;
-        this.added = false;
         this.time_scale = 1;
         this.time_accumulator = 0;
         this.lights = [ new Light( Vec.of( 5,-10,5,1 ), Color.of( 0, 1, 1, 1 ), 1000 ) ];
@@ -568,18 +568,17 @@ class Tanks extends Scene_Component
 
         this.key_triggered_button( "Restart", [ "r" ], () => {
           this.reset = true;
-          this.added = false;
         } );
 
         this.key_triggered_button( "RotRight", [ "a" ], () => {
           if (this.rotate_factor < Math.PI/3)
-            this.rotate_factor += Math.PI/180 * 5;
+            this.rotate_factor += Math.PI/180 * 2;
           //this.tnkposz +=1;
         } );
 
         this.key_triggered_button( "RotLeft", [ "d" ], () => {
           if (this.rotate_factor > -Math.PI/3)
-            this.rotate_factor -= Math.PI/180 * 5;
+            this.rotate_factor -= Math.PI/180 * 2;
           //this.tnkposz += 1;
         } );
         this.new_line();
@@ -598,8 +597,15 @@ class Tanks extends Scene_Component
         return model_transform;
     }
 
-    create_wall(graphics_state, model_transform) {
-        model_transform = model_transform.times(Mat4.translation([-40,3,0]));
+    create_wall1_2(graphics_state, model_transform) {
+        if(this.level == 0)
+          model_transform = model_transform.times(Mat4.translation([-40,3,0]));
+        else if(this.level == 1) 
+          model_transform = model_transform.times(Mat4.translation([-40,3,30]));
+        else if (this.level == 2)
+          model_transform = model_transform.times(Mat4.translation([-40,3,100]));
+
+
         for(var i = 0; i < 12; i++) {
           let bodies = []
             for(var j = 0; j < 3; j++) {
@@ -692,12 +698,10 @@ class Tanks extends Scene_Component
           this.bodiesInColumns = []
           this.freeBodies = []
           this.freeBodiesHit = {}
-
-          if (!this.added) {
-            model_transform = this.create_wall(graphics_state, model_transform);
-          //this.physics_on_one_block(graphics_state, Mat4.identity());
-            this.added = true;
+          if (this.level <= 2) {
+            model_transform = this.create_wall1_2(graphics_state, model_transform);
           }
+          //this.physics_on_one_block(graphics_state, Mat4.identity())
           this.reset = false;
         }
 
