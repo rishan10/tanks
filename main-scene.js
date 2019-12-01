@@ -414,6 +414,10 @@ class Tanks extends Scene_Component
                          square: new Square(),
                          block_texture: new Cube_P(),
                          ball: new Subdivision_Sphere(4),
+//<<<<<<< HEAD
+//=======
+                         sun: new Subdivision_Sphere(4)
+//>>>>>>> 499525e1d370627901d9e89e15af6fcb0ba89a6a
                                 // TODO:  Fill in as many additional shape instances as needed in this key/value table.
                                 //        (Requirement 1)
                        }
@@ -447,11 +451,14 @@ class Tanks extends Scene_Component
                                      // Make some Material objects available to you:
         this.materials =
           {   test:     context.get_instance( Phong_Shader ).material( Color.of( 0,0,1,1 ), { ambient:1 } ),
+              level: context.get_instance( Phong_Shader ).material( Color.of( 0,1,0,1 ), { ambient:1 } ),
+              final: context.get_instance(Phong_Shader).material(Color.of(1,0,0,1), {ambient:1}),
               tankBody:     context.get_instance( Phong_Shader ).material( Color.of( 0.5,0.7,0.4,1 ), { ambient:0.4 } ),
               tankTreads:     context.get_instance( Phong_Shader ).material( Color.of( 0.2,0.2,0,1 ), { ambient:0.4 } ),
               turretBody:     context.get_instance( Phong_Shader ).material( Color.of( 0.3,0.5,0.2,1 ), { ambient:0.4 } ),
               ground: context.get_instance( Phong_Shader ).material(Color.of(0,0,0,1), {ambient: 1, texture: context.get_instance("assets/groundhigherres.jpg", false)}),
-              wall: context.get_instance( Phong_Shader ).material(Color.of(0,0,0,1), {ambient: 1, texture: context.get_instance("assets/brick.png", false)})
+              wall: context.get_instance( Phong_Shader ).material(Color.of(0,0,0,1), {ambient: 1, texture: context.get_instance("assets/brick.png", false)}),
+              sun:      context.get_instance(Phong_Shader  ).material( Color.of( 249/255,215/255,28/255,1 ), { ambient:0.9   } )
             //ring:     context.get_instance( Ring_Shader  ).material()
 
                                 // TODO:  Fill in as many additional material objects as needed in this key/value table.
@@ -467,6 +474,7 @@ class Tanks extends Scene_Component
         this.time_scale = 1;
         this.time_accumulator = 0;
         this.lights = [ new Light( Vec.of( 5,-10,5,1 ), Color.of( 0, 1, 1, 1 ), 1000 ) ];
+        
 
       }
       // gametext(document_element) {
@@ -693,9 +701,15 @@ class Tanks extends Scene_Component
         this.new_line();
         this.key_triggered_button( "Fire cannon", [ " " ], () => {
           this.total_ammo -= 1;
-          this.projectiles.push(new Body(this.shapes.ball, this.materials.test, vec3(1,1,1))
-              .emplace(this.model_tank.times(Mat4.translation([0,2,6])), vec3(this.power*Math.sin(this.rotate_factor),this.power * Math.sin(this.turret_angle*(Math.PI/180.0))*Math.cos(this.rotate_factor),this.power * Math.cos(this.turret_angle*(Math.PI/180.0))), 0, vec3(1,0,0) ));
           remaining_balls = this.total_ammo;
+          if(this.total_ammo != 2){
+            this.projectiles.push(new Body(this.shapes.ball, this.materials.test, vec3(1,1,1))
+              .emplace(this.model_tank.times(Mat4.translation([0,2,6])), vec3(this.power*Math.sin(this.rotate_factor),this.power * Math.sin(this.turret_angle*(Math.PI/180.0))*Math.cos(this.rotate_factor),this.power * Math.cos(this.turret_angle*(Math.PI/180.0))), 0, vec3(1,0,0) ));
+          }   
+          else {
+            this.projectiles.push(new Body(this.shapes.ball, this.materials.final, vec3(1,1,1))
+              .emplace(this.model_tank.times(Mat4.translation([0,2,6])), vec3(this.power*Math.sin(this.rotate_factor),this.power * Math.sin(this.turret_angle*(Math.PI/180.0))*Math.cos(this.rotate_factor),this.power * Math.cos(this.turret_angle*(Math.PI/180.0))), 0, vec3(1,0,0) ));
+          }
         } );
         this.new_line();
         // this.key_triggered_button( "MoveUp", [ "u" ], () => {
@@ -850,13 +864,26 @@ class Tanks extends Scene_Component
         this.shapes.block.draw( graphics_state, model_transform, this.materials.turretBody );
     }
 
+    create_level_blips(graphics_state, offset){
+        let levelScale = Mat4.identity().times(Mat4.scale([1,1,1]));
+        levelScale = levelScale.times(Mat4.translation(Vec.of(105-offset,60,0)));
+        this.shapes.ball.draw(graphics_state, levelScale, this.materials.level);
+    }
+
     display( graphics_state )
       {
-
-
         graphics_state.lights = this.lights;        // Use the lights stored in this.lights.
-        const t = graphics_state.animation_time / 1000, dt = graphics_state.animation_delta_time / 1000;
+        
 
+        const t = graphics_state.animation_time / 1000, dt = graphics_state.animation_delta_time / 1000;
+        let sunRadius = 10;
+        let sunColor = Color.of(249/255, 215/255, 28/255);
+        let sunScale = Mat4.identity().times(Mat4.scale([sunRadius, sunRadius, sunRadius]));
+        sunScale = sunScale.times(Mat4.translation(Vec.of(-10,5,10)));
+        graphics_state.lights = [ new Light( Vec.of(-10,10,-10,1), sunColor, 10**sunRadius) ];
+        this.shapes.sun.draw(graphics_state, sunScale, this.materials.sun);
+        
+        this.create_level_blips(graphics_state, 0);
         this.simulate( graphics_state.animation_delta_time );
 
         if (this.total_ammo == 0) {
@@ -920,7 +947,9 @@ class Tanks extends Scene_Component
           this.score += this.total_ammo;
           score_global=this.score;
           this.total_ammo = 40 + 5*(this.level-1);
-          remaining_balls = this.total_ammo;
+         remaining_balls = this.total_ammo;
+
+          this.create_level_blips(graphics_state, 5*(this.level-1));
           
         }
 
