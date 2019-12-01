@@ -335,6 +335,7 @@ class Tanks extends Scene_Component
                                      // Make some Material objects available to you:
         this.materials =
           {   test:     context.get_instance( Phong_Shader ).material( Color.of( 0,0,1,1 ), { ambient:1 } ),
+              level: context.get_instance( Phong_Shader ).material( Color.of( 0,1,0,1 ), { ambient:1 } ),
               final: context.get_instance(Phong_Shader).material(Color.of(1,0,0,1), {ambient:1}),
               tankBody:     context.get_instance( Phong_Shader ).material( Color.of( 0.5,0.7,0.4,1 ), { ambient:0.4 } ),
               tankTreads:     context.get_instance( Phong_Shader ).material( Color.of( 0.2,0.2,0,1 ), { ambient:0.4 } ),
@@ -717,6 +718,12 @@ class Tanks extends Scene_Component
         this.shapes.block.draw( graphics_state, model_transform, this.materials.turretBody );
     }
 
+    create_level_blips(graphics_state, offset){
+        let levelScale = Mat4.identity().times(Mat4.scale([1,1,1]));
+        levelScale = levelScale.times(Mat4.translation(Vec.of(105-offset,60,0)));
+        this.shapes.ball.draw(graphics_state, levelScale, this.materials.level);
+    }
+
     display( graphics_state )
       {
         graphics_state.lights = this.lights;        // Use the lights stored in this.lights.
@@ -729,7 +736,8 @@ class Tanks extends Scene_Component
         sunScale = sunScale.times(Mat4.translation(Vec.of(-10,5,10)));
         graphics_state.lights = [ new Light( Vec.of(-10,10,-10,1), sunColor, 10**sunRadius) ];
         this.shapes.sun.draw(graphics_state, sunScale, this.materials.sun);
-
+        
+        this.create_level_blips(graphics_state, 0);
         this.simulate( graphics_state.animation_delta_time );
 
         if (this.total_ammo == 0) {
@@ -785,6 +793,7 @@ class Tanks extends Scene_Component
           this.reset = true;
           this.level += 1;
           this.total_ammo = 40 + 5*(this.level-1);
+          this.create_level_blips(graphics_state, 5*this.level);
           
         }
 
