@@ -326,6 +326,7 @@ class Tanks extends Scene_Component
         this.ball_mass = 20;
         this.tnkposz = 0;
         this.c_toggle = false;
+        this.reset = true;
         this.rotate_factor = 0;
 
                                      // Make some Material objects available to you:
@@ -565,6 +566,11 @@ class Tanks extends Scene_Component
         // } );
         // this.new_line();
 
+        this.key_triggered_button( "Restart", [ "r" ], () => {
+          this.reset = true;
+          this.added = false;
+        } );
+
         this.key_triggered_button( "RotRight", [ "a" ], () => {
           if (this.rotate_factor < Math.PI/3)
             this.rotate_factor += Math.PI/180 * 5;
@@ -646,6 +652,7 @@ class Tanks extends Scene_Component
     display( graphics_state )
       {
 
+
         graphics_state.lights = this.lights;        // Use the lights stored in this.lights.
         const t = graphics_state.animation_time / 1000, dt = graphics_state.animation_delta_time / 1000;
 
@@ -680,10 +687,18 @@ class Tanks extends Scene_Component
         let model_transform = Mat4.identity().times(Mat4.scale([4,4,1]));
 
         model_transform = this.create_ground(graphics_state, Mat4.identity());
-        if (!this.added) {
-          model_transform = this.create_wall(graphics_state, model_transform);
+        if(this.reset) {
+          this.bodies = []
+          this.bodiesInColumns = []
+          this.freeBodies = []
+          this.freeBodiesHit = {}
+
+          if (!this.added) {
+            model_transform = this.create_wall(graphics_state, model_transform);
           //this.physics_on_one_block(graphics_state, Mat4.identity());
-          this.added = true;
+            this.added = true;
+          }
+          this.reset = false;
         }
 
 
