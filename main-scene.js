@@ -334,7 +334,7 @@ class Tanks extends Scene_Component
               tankBody:     context.get_instance( Phong_Shader ).material( Color.of( 0.5,0.7,0.4,1 ), { ambient:0.4 } ),
               tankTreads:     context.get_instance( Phong_Shader ).material( Color.of( 0.2,0.2,0,1 ), { ambient:0.4 } ),
               turretBody:     context.get_instance( Phong_Shader ).material( Color.of( 0.3,0.5,0.2,1 ), { ambient:0.4 } ),
-              ground: context.get_instance( Phong_Shader ).material(Color.of(0,0,0,1), {ambient: 1, texture: context.get_instance("assets/ground.jpeg", false)}),
+              ground: context.get_instance( Phong_Shader ).material(Color.of(0,0,0,1), {ambient: 1, texture: context.get_instance("assets/groundhigherres.jpg", false)}),
               wall: context.get_instance( Phong_Shader ).material(Color.of(0,0,0,1), {ambient: 1, texture: context.get_instance("assets/brick.png", false)})
             //ring:     context.get_instance( Ring_Shader  ).material()
 
@@ -354,7 +354,6 @@ class Tanks extends Scene_Component
         this.time_accumulator = 0;
         this.lights = [ new Light( Vec.of( 5,-10,5,1 ), Color.of( 0, 1, 1, 1 ), 1000 ) ];
 
-        this.blockProjectileMap = {};
       }
       resolve_collision(brick, projectile) {
         let collide_angle = Math.atan2(brick.center[1] - projectile.center[1]
@@ -426,37 +425,6 @@ class Tanks extends Scene_Component
 
       const collider = this.colliders[ this.collider_selection ];
       var i = 0, j = 0;
-      // for (let a of this.bodies) {
-      //   a.linear_velocity[1] = a.linear_velocity[1]/1;
-      //   a.linear_velocity[2] = a.linear_velocity[2]/1.01;
-      //   //check if the projectile is colliding with a brick
-      //   j = 0;
-      //   for (let p of this.projectiles) {
-      //     p.linear_velocity[1] = p.linear_velocity[1]/1;
-      //     p.linear_velocity[2] = p.linear_velocity[2]/1.001;
-      //     if(!a.check_if_colliding(p, collider)) {
-      //       continue;
-      //     }
-      //     if(!(i in this.blockProjectileMap)){
-      //       this.resolve_collision(a, p);
-      //       this.blockProjectileMap[i] = {};
-      //       this.blockProjectileMap[i][this.projectiles.length - j] = true;
-      //     } else if(!((this.projectiles.length - j) in this.blockProjectileMap[i])){
-      //       this.resolve_collision(a, p);
-      //       this.blockProjectileMap[i][this.projectiles.length - j] = true;
-      //     }
-      //     j++;
-      //   }
-      //   for( let b of this.bodies )
-      //       {                               // Pass the two bodies and the collision shape to check_if_colliding():
-      //         if( !a.check_if_colliding( b, collider ) ) {
-      //           continue;
-      //         }
-      //         a.linear_velocity[1] = 0;
-      //         //this.resolve_collision(a, b);
-      //       }
-      //   i++;
-      // }
 
       //check if ball is colliding with a block
 
@@ -510,24 +478,13 @@ class Tanks extends Scene_Component
           bodyNum--;
           continue;
         }
-
-        for(let ball of this.projectiles) {
-          if(!body1.check_if_colliding(ball, collider)) {
-            continue;
-          }
-          
-          //resolve collision between ball and body1
-          if(this.freeBodies.length - bodyNum in this.freeBodiesHit){
-            this.freeBodiesHit[this.freeBodies.length - bodyNum] = true;
-            this.resolve_collision(body1, ball)
-          }
-        }
       }
 
       for (let a of this.projectiles) {
         a.linear_velocity[1] += dt * -9.8;
 
         if(a.center[1] < -9) {
+          a.linear_velocity[0] *= 0.9
           a.linear_velocity[1] *= -0.7
           a.linear_velocity[2] *= 0.7
         }
@@ -626,11 +583,11 @@ class Tanks extends Scene_Component
       }
 
     create_ground(graphics_state, model_transform) {
-        model_transform = model_transform.times( Mat4.translation( [0,-10,0] )).times( Mat4.rotation( Math.PI/2,   Vec.of(1,0,0) ) ).times( Mat4.scale( [150,200,1] ) );
+        model_transform = model_transform.times( Mat4.translation( [0,-10,0] )).times( Mat4.rotation( Math.PI/2,   Vec.of(1,0,0) ) ).times( Mat4.scale( [300,300,1] ) );
 
         this.shapes.square.draw( graphics_state,  model_transform ,
             this.materials.ground);
-        model_transform = model_transform.times(Mat4.scale([1/150, 1/200,1])).times(Mat4.rotation(Math.PI/2, Vec.of(-1,0,0)))
+        model_transform = model_transform.times(Mat4.scale([1/300, 1/300,1])).times(Mat4.rotation(Math.PI/2, Vec.of(-1,0,0)))
         model_transform = model_transform.times(Mat4.translation([0,1,0]))
         return model_transform;
     }
