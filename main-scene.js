@@ -1,4 +1,6 @@
-
+var score_global;
+var remaining_balls;
+var curr_level;
 class Vector extends Float32Array
 {                                   // **Vector** stores vectors of floating point numbers.  Puts vector math into JavaScript.
                                     // Note:  Vectors should be created with of() due to wierdness with the TypedArray spec.
@@ -203,6 +205,7 @@ const vec4    = Vector4.create;
 const unsafe3 = Vector3.unsafe;
 const unsafe4 = Vector4.unsafe;
 
+
 class Body
 {                                   // **Body** can store and update the properties of a 3D body that incrementally
                                     // moves from its previous place due to velocities.  It conforms to the
@@ -286,12 +289,119 @@ class Body
     }
 }
 
+
+window.ScorePanel = window.classes.ScorePanel =
+class ScorePanel extends Scene_Component    // Movement_Controls is a Scene_Component that can be attached to a canvas, like any 
+{                                                  // other Scene, but it is a Secondary Scene Component -- meant to stack alongside other
+                                                   // scenes.  Rather than drawing anything it embeds both first-person and third-person
+                                                   // style controls into the website.  These can be uesd to manually move your camera or
+                                                   // other objects smoothly through your scene using key, mouse, and HTML button controls
+                                                   // to help you explore what's in it.
+  constructor( context, control_box, canvas = context.canvas )
+    { super( context, control_box );
+      [ this.context, this.roll, this.look_around_locked, this.invert ] = [ context, 0, true, true ];                  // Data members
+      [ this.thrust, this.pos, this.z_axis ] = [ Vec.of( 0,0,0 ), Vec.of( 0,0,0 ), Vec.of( 0,0,0 ) ];
+                                                 // The camera matrix is not actually stored here inside Movement_Controls; instead, track
+                                                 // an external matrix to modify. This target is a reference (made with closures) kept
+                                                 // in "globals" so it can be seen and set by other classes.  Initially, the default target
+                                                 // is the camera matrix that Shaders use, stored in the global graphics_state object.
+      this.target = function() { return context.globals.movement_controls_target() }
+      context.globals.movement_controls_target = function(t) { return context.globals.graphics_state.camera_transform };
+      context.globals.movement_controls_invert = this.will_invert = () => true;
+      context.globals.has_controls = true;
+
+      [ this.radians_per_frame, this.meters_per_frame, this.speed_multiplier ] = [ 1/200, 20, 1 ];
+      
+      // *** Mouse controls: ***
+      this.mouse = { "from_center": Vec.of( 0,0 ) };                           // Measure mouse steering, for rotating the flyaround camera:
+      const mouse_position = ( e, rect = canvas.getBoundingClientRect() ) => 
+                                   Vec.of( e.clientX - (rect.left + rect.right)/2, e.clientY - (rect.bottom + rect.top)/2 );
+                                        // Set up mouse response.  The last one stops us from reacting if the mouse leaves the canvas.
+      document.addEventListener( "mouseup",   e => { this.mouse.anchor = undefined; } );
+      canvas  .addEventListener( "mousedown", e => { e.preventDefault(); this.mouse.anchor      = mouse_position(e); } );
+      canvas  .addEventListener( "mousemove", e => { e.preventDefault(); this.mouse.from_center = mouse_position(e); } );
+      canvas  .addEventListener( "mouseout",  e => { if( !this.mouse.anchor ) this.mouse.from_center.scale(0) } );  
+    }
+  show_explanation( document_element ) { }
+  make_control_panel()                                                        // This function of a scene sets up its keyboard shortcuts.
+    { const globals = this.globals;
+      // this.key_triggered_button( "Up",     [ " " ], () => this.thrust[1] = -1, undefined, () => this.thrust[1] = 0 );
+      // this.key_triggered_button( "Forward",[ "w" ], () => this.thrust[2] =  1, undefined, () => this.thrust[2] = 0 );  this.new_line();
+      // this.key_triggered_button( "Left",   [ "a" ], () => this.thrust[0] =  1, undefined, () => this.thrust[0] = 0 );
+      // this.key_triggered_button( "Back",   [ "s" ], () => this.thrust[2] = -1, undefined, () => this.thrust[2] = 0 );
+      // this.key_triggered_button( "Right",  [ "d" ], () => this.thrust[0] = -1, undefined, () => this.thrust[0] = 0 );  this.new_line();
+      // this.key_triggered_button( "Down",   [ "z" ], () => this.thrust[1] =  1, undefined, () => this.thrust[1] = 0 ); 
+
+      // const speed_controls = this.control_panel.appendChild( document.createElement( "span" ) );
+      // speed_controls.style.margin = "30px";
+      // this.key_triggered_button( "-",  [ "o" ], () => this.speed_multiplier  /=  1.2, "green", undefined, undefined, speed_controls );
+      // this.live_string( box => { box.textContent = "Speed: " + this.speed_multiplier.toFixed(2) }, speed_controls );
+      // this.key_triggered_button( "+",  [ "p" ], () => this.speed_multiplier  *=  1.2, "green", undefined, undefined, speed_controls );
+      // this.new_line();
+      // this.key_triggered_button( "Roll left",  [ "," ], () => this.roll =  1, undefined, () => this.roll = 0 );
+      // this.key_triggered_button( "Roll right", [ "." ], () => this.roll = -1, undefined, () => this.roll = 0 );  this.new_line();
+      // this.key_triggered_button( "(Un)freeze mouse look around", [ "f" ], () => this.look_around_locked ^=  1, "green" );
+      // this.new_line();
+      // this.live_string( box => box.textContent = "Position: " + this.pos[0].toFixed(2) + ", " + this.pos[1].toFixed(2) 
+      //                                                  + ", " + this.pos[2].toFixed(2) );
+      this.new_line();        // The facing directions are actually affected by the left hand rule:
+      this.live_string( box => box.textContent = "Score: " + score_global);
+      this.new_line();        // The facing directions are actually affected by the left hand rule:
+      this.live_string( box => box.textContent = "Total Ammo remaining: " + remaining_balls);
+      this.new_line();
+      this.live_string( box => box.textContent = "Current Level:" + curr_level);
+      // this.new_line();     
+      // this.key_triggered_button( "Go to world origin", [ "r" ], () => this.target().set_identity( 4,4 ), "orange" );  this.new_line();
+      // this.key_triggered_button( "Attach to global camera", [ "Shift", "R" ], () => 
+      //                                     globals.movement_controls_target = () => globals.graphics_state.camera_transform, "blue" );
+      // this.new_line();
+    }
+  first_person_flyaround( radians_per_frame, meters_per_frame, leeway = 70 )
+    { const sign = this.will_invert ? 1 : -1;
+      const do_operation = this.target()[ this.will_invert ? "pre_multiply" : "post_multiply" ].bind( this.target() );
+                                                                      // Compare mouse's location to all four corners of a dead box.
+      const offsets_from_dead_box = { plus: [ this.mouse.from_center[0] + leeway, this.mouse.from_center[1] + leeway ],
+                                     minus: [ this.mouse.from_center[0] - leeway, this.mouse.from_center[1] - leeway ] }; 
+                // Apply a camera rotation movement, but only when the mouse is past a minimum distance (leeway) from the canvas's center:
+      if( !this.look_around_locked ) 
+        for( let i = 0; i < 2; i++ )      // Steer according to "mouse_from_center" vector, but don't 
+        {                                 // start increasing until outside a leeway window from the center.
+          let o = offsets_from_dead_box,                                          // The &&'s in the next line might zero the vectors out:
+            velocity = ( ( o.minus[i] > 0 && o.minus[i] ) || ( o.plus[i] < 0 && o.plus[i] ) ) * radians_per_frame;
+          do_operation( Mat4.rotation( sign * velocity, Vec.of( i, 1-i, 0 ) ) );   // On X step, rotate around Y axis, and vice versa.
+        }
+      if( this.roll != 0 ) do_operation( Mat4.rotation( sign * .1, Vec.of(0, 0, this.roll ) ) );
+                                                  // Now apply translation movement of the camera, in the newest local coordinate frame.
+      do_operation( Mat4.translation( this.thrust.times( sign * meters_per_frame ) ) );
+    }
+  third_person_arcball( radians_per_frame )
+    { const sign = this.will_invert ? 1 : -1;
+      const do_operation = this.target()[ this.will_invert ? "pre_multiply" : "post_multiply" ].bind( this.target() );
+      const dragging_vector = this.mouse.from_center.minus( this.mouse.anchor );               // Spin the scene around a point on an
+      if( dragging_vector.norm() <= 0 ) return;                                                // axis determined by user mouse drag.
+      do_operation( Mat4.translation([ 0,0, sign *  25 ]) );           // The presumed distance to the scene is a hard-coded 25 units.
+      do_operation( Mat4.rotation( radians_per_frame * dragging_vector.norm(), Vec.of( dragging_vector[1], dragging_vector[0], 0 ) ) );
+      do_operation( Mat4.translation([ 0,0, sign * -25 ]) );
+    }
+  display( graphics_state, dt = graphics_state.animation_delta_time / 1000 )    // Camera code starts here.
+    { const m = this.speed_multiplier * this. meters_per_frame,
+            r = this.speed_multiplier * this.radians_per_frame;
+      this.first_person_flyaround( dt * r, dt * m );     // Do first-person.  Scale the normal camera aiming speed by dt for smoothness.
+      if( this.mouse.anchor )                            // Also apply third-person "arcball" camera mode if a mouse drag is occurring.  
+        this.third_person_arcball( dt * r);           
+      
+      const inv = Mat4.inverse( this.target() );
+      this.pos = inv.times( Vec.of( 0,0,0,1 ) ); this.z_axis = inv.times( Vec.of( 0,0,1,0 ) );      // Log some values.
+    }
+}
+
+
 window.Tanks = window.classes.Tanks =
 class Tanks extends Scene_Component
   { constructor( context, control_box )     // The scene begins by requesting the camera, shapes, and materials it will need.
       { super(   context, control_box );    // First, include a secondary Scene that provides movement controls:
         if( !context.globals.has_controls   )
-          context.register_scene_component( new Movement_Controls( context, control_box.parentElement.insertCell() ) );
+          context.register_scene_component( new ScorePanel( context, control_box.parentElement.insertCell() ) );
 
         context.globals.graphics_state.camera_transform = Mat4.look_at( Vec.of( 7.85,40.51,-158.78 ), Vec.of( 0,0,0 ), Vec.of( 0,1,0 ) );
         this.initial_camera_location = Mat4.inverse( context.globals.graphics_state.camera_transform );
@@ -303,7 +413,7 @@ class Tanks extends Scene_Component
                          block : new Cube(),
                          square: new Square(),
                          block_texture: new Cube_P(),
-                         ball: new Subdivision_Sphere(4)
+                         ball: new Subdivision_Sphere(4),
                                 // TODO:  Fill in as many additional shape instances as needed in this key/value table.
                                 //        (Requirement 1)
                        }
@@ -330,6 +440,9 @@ class Tanks extends Scene_Component
         this.rotate_factor = 0;
         this.level = 0;
         this.total_ammo = 40;
+        this.score = curr_level = 0;
+        score_global=this.score;
+        remaining_balls = this.total_ammo;
 
                                      // Make some Material objects available to you:
         this.materials =
@@ -355,6 +468,33 @@ class Tanks extends Scene_Component
         this.time_accumulator = 0;
         this.lights = [ new Light( Vec.of( 5,-10,5,1 ), Color.of( 0, 1, 1, 1 ), 1000 ) ];
 
+      }
+      // gametext(document_element) {
+      //   document_element.innerHTML += `<p>Score` + this.score + `<t> Current Level:` + this.level + `</p>`
+      // }
+      create_cubemap(gl) {
+        var texture = gl.createTexture();
+        //var depthProgramID = LoadShaders( "depthShader.vertexshader", "depthShader.fragmentshader" );
+        //var depthMatrixID = gl.GetUniformLocation(depthProgramID, "depthMVP");
+
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.TexImage2D(gl.TEXTURE_2D, 0,gl.DEPTH_COMPONENT16, 1024, 1024, 0,gl.DEPTH_COMPONENT, gl.FLOAT, 0);
+        gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.FramebufferTexture(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, depthTexture, 0);
+
+        gl.DrawBuffer(gl.NONE);
+
+        if (gl.checkFramebufferStates(gl.FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE)
+          return false;
+
+        let light_position = this.lights[0].position;
+        let depthProjectionMatrix = Mat4.orthographic(-300, 300, 0, 250, -300, 300);
+        let depthViewMatrix = Mat4.look_at(light_position, Vec.of(0,0,0), Vec.of(0,1,0));
+        let depthMVP = depthProjectionMatrix * depthViewMatrix * Mat4.identity();
+        //gl.UniformMatrix4fv(depthMatrixID, 1, gl.FALSE, &depthMVP[0][0])
       }
       resolve_collision(brick, projectile) {
         let collide_angle = Math.atan2(brick.center[1] - projectile.center[1]
@@ -545,7 +685,6 @@ class Tanks extends Scene_Component
           this.turret_angle += 5; //add 5 degrees
         }
       } );
-        this.new_line();
         this.key_triggered_button( "Decrease turret angle", [ "s" ], () => {
           if(this.turret_angle - 5 >= 0) {
             this.turret_angle -= 5;
@@ -556,8 +695,9 @@ class Tanks extends Scene_Component
           this.total_ammo -= 1;
           this.projectiles.push(new Body(this.shapes.ball, this.materials.test, vec3(1,1,1))
               .emplace(this.model_tank.times(Mat4.translation([0,2,6])), vec3(this.power*Math.sin(this.rotate_factor),this.power * Math.sin(this.turret_angle*(Math.PI/180.0))*Math.cos(this.rotate_factor),this.power * Math.cos(this.turret_angle*(Math.PI/180.0))), 0, vec3(1,0,0) ));
+          remaining_balls = this.total_ammo;
         } );
-
+        this.new_line();
         // this.key_triggered_button( "MoveUp", [ "u" ], () => {
         //   this.tnkposz += 1;
         // } );
@@ -570,8 +710,11 @@ class Tanks extends Scene_Component
         this.key_triggered_button( "Restart", [ "r" ], () => {
           this.reset = true;
           this.level = 0;
+          curr_level = 0;
+          this.total_ammo = 40;
+          remaining_balls = this.total_ammo;
         } );
-
+        this.new_line();
         this.key_triggered_button( "RotRight", [ "a" ], () => {
           if (this.rotate_factor < Math.PI/3)
             this.rotate_factor += Math.PI/180 * 2;
@@ -719,6 +862,10 @@ class Tanks extends Scene_Component
         if (this.total_ammo == 0) {
           this.reset = true;
           this.total_ammo = 40;
+          remaining_balls = this.total_ammo;
+          this.score = 0;
+          curr_level = 0;
+          this.level = 0;
           return;
         }
         // create 3 tanks
@@ -766,9 +913,14 @@ class Tanks extends Scene_Component
         }
 
         if (this.isempty()) {
+          console.log(this.level);
           this.reset = true;
           this.level += 1;
+          curr_level += 1;
+          this.score += this.total_ammo;
+          score_global=this.score;
           this.total_ammo = 40 + 5*(this.level-1);
+          remaining_balls = this.total_ammo;
           
         }
 
