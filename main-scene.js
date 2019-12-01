@@ -625,6 +625,49 @@ class Tanks extends Scene_Component
 
     }
 
+
+    create_wall4_5(graphics_state, model_transform) {
+        model_transform = model_transform.times(Mat4.translation([-40,3,35]));
+
+
+        for(var i = 0; i < 6; i++) {
+          let bodies = []
+            for(var j = 0; j < 3; j++) {
+
+                bodies.push(new Body(this.shapes.block_texture, this.materials.wall, vec3(4,4,1))
+                    .emplace(model_transform, vec3(0,0,0), 0, vec3(1,0,0) ));
+                model_transform= model_transform
+                    .times( Mat4.translation([0,8,0]))
+                //this.shapes.block.draw(graphics_state, model_transform, this.materials.test);
+            }
+            this.bodiesInColumns.push(bodies)
+            model_transform = model_transform
+                .times( Mat4.translation([8, -24,0]));
+        }
+
+        model_transform = model_transform.times(Mat4.translation([50,0,70]));
+
+        for(var i = 0; i < 6; i++) {
+          let bodies = []
+            for(var j = 0; j < 3; j++) {
+
+                bodies.push(new Body(this.shapes.block_texture, this.materials.wall, vec3(4,4,1))
+                    .emplace(model_transform, vec3(0,0,0), 0, vec3(1,0,0) ));
+                model_transform= model_transform
+                    .times( Mat4.translation([0,8,0]))
+                //this.shapes.block.draw(graphics_state, model_transform, this.materials.test);
+            }
+            this.bodiesInColumns.push(bodies)
+            model_transform = model_transform
+                .times( Mat4.translation([8, -24,0]));
+        }
+
+
+
+        return model_transform;
+
+    }
+
     isempty(){
       for (let col of this.bodiesInColumns) {
         if (col.length != 0) 
@@ -708,6 +751,9 @@ class Tanks extends Scene_Component
           this.projectiles = []
           if (this.level <= 2) {
             model_transform = this.create_wall1_2(graphics_state, model_transform);
+          }
+          else if(this.level <=4) {
+            model_transform = this.create_wall4_5(graphics_state, model_transform);
           }
           //this.physics_on_one_block(graphics_state, Mat4.identity())
           this.reset = false;
