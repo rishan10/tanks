@@ -793,7 +793,7 @@ class Tanks extends Scene_Component
           this.reset = true;
           this.level += 1;
           this.total_ammo = 40 + 5*(this.level-1);
-          this.create_level_blips(graphics_state, 5*this.level);
+          this.create_level_blips(graphics_state, 5*(this.level-1));
           
         }
 
