@@ -539,13 +539,13 @@ class Tanks extends Scene_Component
     }
 
     make_control_panel()            // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
-      { this.key_triggered_button( "Increase turret angle",  [ "q" ], () => {
+      { this.key_triggered_button( "Increase turret angle",  [ "w" ], () => {
         if(this.turret_angle + 5 < 45) {
           this.turret_angle += 5; //add 5 degrees
         }
       } );
         this.new_line();
-        this.key_triggered_button( "Decrease turret angle", [ "e" ], () => {
+        this.key_triggered_button( "Decrease turret angle", [ "s" ], () => {
           if(this.turret_angle - 5 >= 0) {
             this.turret_angle -= 5;
           }
@@ -565,13 +565,13 @@ class Tanks extends Scene_Component
         // } );
         // this.new_line();
 
-        this.key_triggered_button( "RotRight", [ "k" ], () => {
+        this.key_triggered_button( "RotRight", [ "a" ], () => {
           if (this.rotate_factor < Math.PI/3)
             this.rotate_factor += Math.PI/180 * 5;
           //this.tnkposz +=1;
         } );
 
-        this.key_triggered_button( "RotLeft", [ "h" ], () => {
+        this.key_triggered_button( "RotLeft", [ "d" ], () => {
           if (this.rotate_factor > -Math.PI/3)
             this.rotate_factor -= Math.PI/180 * 5;
           //this.tnkposz += 1;
