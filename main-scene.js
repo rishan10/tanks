@@ -401,126 +401,6 @@ class ScorePanel extends Scene_Component    // Movement_Controls is a Scene_Comp
 
 
 
-class CameraShader extends Shader {
-  shared_glsl_code(){
-
-  }
-  vertex_glsl_code(){
-    return `
-attribute vec3 aVertexPosition;
-
-uniform mat4 uPMatrix;
-uniform mat4 uMVMatrix;
-uniform mat4 lightMViewMatrix;
-uniform mat4 lightProjectionMatrix;
-
-const mat4 texUnitConverter = mat4(0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 
-0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.5, 0.5, 0.5, 1.0);
-
-varying vec2 vDepthUv;
-varying vec4 shadowPos;
-
-void main (void) {
-  gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
-
-  shadowPos = texUnitConverter * lightProjectionMatrix *
-  lightMViewMatrix * vec4(aVertexPosition, 1.0);
-}
-`
-  }
-  fragment_glsl_code(){
-    var shadowDepthTextureSize = 1024
-
-    return `
-precision mediump float;
-
-varying vec2 vDepthUv;
-varying vec4 shadowPos;
-
-uniform sampler2D depthColorTexture;
-uniform vec3 uColor;
-
-float decodeFloat (vec4 color) {
-  const vec4 bitShift = vec4(
-    1.0 / (256.0 * 256.0 * 256.0),
-    1.0 / (256.0 * 256.0),
-    1.0 / 256.0,
-    1
-  );
-  return dot(color, bitShift);
-}
-
-void main(void) {
-  vec3 fragmentDepth = shadowPos.xyz;
-  float shadowAcneRemover = 0.007;
-  fragmentDepth.z -= shadowAcneRemover;
-
-  float texelSize = 1.0 / ${shadowDepthTextureSize}.0;
-  float amountInLight = 0.0;
-
-  for (int x = -1; x <= 1; x++) {
-    for (int y = -1; y <= 1; y++) {
-      float texelDepth = decodeFloat(texture2D(depthColorTexture,
-      fragmentDepth.xy + vec2(x, y) * texelSize));
-      if (fragmentDepth.z < texelDepth) {
-        amountInLight += 1.0;
-      }
-    }
-  }
-  amountInLight /= 9.0;
-
-  gl_FragColor = vec4(amountInLight * uColor, 1.0);
-}
-`
-  }
-}
-
-class LightShader extends Shader {
-  shared_glsl_code(){
-
-  }
-  vertex_glsl_code(){
-    return `
-attribute vec3 aVertexPosition;
-
-uniform mat4 uPMatrix;
-uniform mat4 uMVMatrix;
-
-void main (void) {
-  gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
-}
-`
-  }
-
-  fragment_glsl_code(){
-    return `
-precision mediump float;
-
-vec4 encodeFloat (float depth) {
-  const vec4 bitShift = vec4(
-    256 * 256 * 256,
-    256 * 256,
-    256,
-    1.0
-  );
-  const vec4 bitMask = vec4(
-    0,
-    1.0 / 256.0,
-    1.0 / 256.0,
-    1.0 / 256.0
-  );
-  vec4 comp = fract(depth * bitShift);
-  comp -= comp.xxyz * bitMask;
-  return comp;
-}
-
-void main (void) {
-  gl_FragColor = encodeFloat(gl_FragCoord.z);
-}
-`
-  }
-
-}
 
 window.Tanks = window.classes.Tanks =
 class Tanks extends Scene_Component
@@ -586,8 +466,6 @@ class Tanks extends Scene_Component
               turretBody:     context.get_instance( Phong_Shader ).material( Color.of( 0.3,0.5,0.2,1 ), { ambient:0.4 } ),
               ground: context.get_instance( Phong_Shader ).material(Color.of(0,0,0,1), {ambient: 1, texture: context.get_instance("assets/groundhigherres.jpg", false)}),
               wall: context.get_instance( Phong_Shader ).material(Color.of(0,0,0,1), {ambient: 1, texture: context.get_instance("assets/brick.png", false)}),
-              lightShader: context.get_instance(LightShader),
-              cameraShader: context.get_instance(CameraShader),
 
 
 
@@ -890,8 +768,8 @@ class Tanks extends Scene_Component
           this.total_ammo -= 1;
           remaining_balls = this.total_ammo;
           if(this.total_ammo != 2){
-            this.projectiles = [new Body(this.shapes.ball, this.materials.test, vec3(1,1,1))
-              .emplace(this.model_tank.times(Mat4.translation([0,2,6])), vec3(this.power*Math.sin(this.rotate_factor),this.power * Math.sin(this.turret_angle*(Math.PI/180.0))*Math.cos(this.rotate_factor),this.power * Math.cos(this.turret_angle*(Math.PI/180.0))), 0, vec3(1,0,0) )];
+            this.projectiles.push(new Body(this.shapes.ball, this.materials.test, vec3(1,1,1))
+              .emplace(this.model_tank.times(Mat4.translation([0,2,6])), vec3(this.power*Math.sin(this.rotate_factor),this.power * Math.sin(this.turret_angle*(Math.PI/180.0))*Math.cos(this.rotate_factor),this.power * Math.cos(this.turret_angle*(Math.PI/180.0))), 0, vec3(1,0,0) ));
           }   
           else {
             this.projectiles.push(new Body(this.shapes.ball, this.materials.final, vec3(1,1,1))
