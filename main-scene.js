@@ -464,12 +464,12 @@ class Tanks extends Scene_Component
               tankBody:     context.get_instance( Phong_Shader ).material( Color.of( 0.5,0.7,0.4,1 ), { ambient:0.4 } ),
               tankTreads:     context.get_instance( Phong_Shader ).material( Color.of( 0.2,0.2,0,1 ), { ambient:0.4 } ),
               turretBody:     context.get_instance( Phong_Shader ).material( Color.of( 0.3,0.5,0.2,1 ), { ambient:0.4 } ),
-              ground: context.get_instance( Phong_Shader ).material(Color.of(0,0,0,1), {ambient: 1, texture: context.get_instance("assets/groundhigherres.jpg", false)}),
-              wall: context.get_instance( Phong_Shader ).material(Color.of(0,0,0,1), {ambient: 1, texture: context.get_instance("assets/brick.png", false)}),
+              ground: context.get_instance( Bump_Map_Shader ).material(Color.of(0,0,0,1), {ambient: 1, texture: context.get_instance("assets/groundhigherres.jpg", false)}),
+              wall: context.get_instance( Bump_Map_Shader ).material(Color.of(0,0,0,1), {ambient: 1, texture: context.get_instance("assets/brick.png", false)}),
 
 
 
-              sun:      context.get_instance(Bump_Map_Shader  ).material( Color.of( 249/255,215/255,28/255,1 ), { ambient:0.6   } )
+              sun:      context.get_instance(Bump_Map_Shader  ).material( Color.of( 249/255,215/255,28/255,1 ), { ambient:0.6 } )
             //ring:     context.get_instance( Ring_Shader  ).material()
 
                                 // TODO:  Fill in as many additional material objects as needed in this key/value table.
@@ -1142,8 +1142,9 @@ class Bump_Map_Shader extends Phong_Shader
           }                                 
                                            
           
-          vec4 tex_color = texture2D( texture, f_tex_coord );                    
-          vec3 bumps  = normalize( N + tex_color.rgb - 0.8*vec3(1,1,1) );      
+          vec4 tex_color = texture2D( texture, f_tex_coord );  
+          vec3 normal = normalize(N * 10.0- - 1.0);                  
+          vec3 bumps  = normalize( normal + tex_color.rgb - 0.8*vec3(1,1,1) );      
                                                                                  
                                                                                  
                                                                                  
@@ -1151,6 +1152,43 @@ class Bump_Map_Shader extends Phong_Shader
           else gl_FragColor = vec4( shapeColor.xyz * ambient, shapeColor.w );
           gl_FragColor.xyz += phong_model_lights( bumps );                    
         }`;
+    }
+}
+
+window.Wall_Shader = window.classes.Ring_Shader =
+class Ring_Shader extends Shader              // Subclasses of Shader each store and manage a complete GPU program.
+{ material() { return { shader: this } }      // Materials here are minimal, without any settings.
+  map_attribute_name_to_buffer_name( name )       // The shader will pull single entries out of the vertex arrays, by their data fields'
+    {                                             // names.  Map those names onto the arrays we'll pull them from.  This determines
+                                                  // which kinds of Shapes this Shader is compatible with.  Thanks to this function, 
+                                                  // Vertex buffers in the GPU can get their pointers matched up with pointers to 
+                                                  // attribute names in the GPU.  Shapes and Shaders can still be compatible even
+                                                  // if some vertex data feilds are unused. 
+      return { object_space_pos: "positions" }[ name ];      // Use a simple lookup table.
+    }
+    // Define how to synchronize our JavaScript's variables to the GPU's:
+  update_GPU( g_state, model_transform, material, gpu = this.g_addrs, gl = this.gl )
+      { const proj_camera = g_state.projection_transform.times( g_state.camera_transform );
+                                                                                        // Send our matrices to the shader programs:
+        gl.uniformMatrix4fv( gpu.model_transform_loc,             false, Mat.flatten_2D_to_1D( model_transform.transposed() ) );
+        gl.uniformMatrix4fv( gpu.projection_camera_transform_loc, false, Mat.flatten_2D_to_1D(     proj_camera.transposed() ) );
+      }
+  shared_glsl_code()            // ********* SHARED CODE, INCLUDED IN BOTH SHADERS *********
+    { return `precision mediump float;
+              varying vec4 position;
+              varying vec4 center;
+      `;
+    }
+  fragment_glsl_code()           // ********* FRAGMENT SHADER *********
+    { return `
+        uniform sampler2D texture;
+        void main()
+        { 
+          vec4 tex_color = texture2D( texture, f_tex_coord );    
+          if( USE_TEXTURE ) gl_FragColor = vec4( ( tex_color.xyz + shapeColor.xyz ) * ambient, shapeColor.w * tex_color.w ); 
+          else gl_FragColor = vec4( shapeColor.xyz * ambient, shapeColor.w );
+         
+        }`;           // TODO:  Complete the main function of the fragment shader (Extra Credit Part II).
     }
 }
 
