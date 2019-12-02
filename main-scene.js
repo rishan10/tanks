@@ -395,6 +395,126 @@ class ScorePanel extends Scene_Component    // Movement_Controls is a Scene_Comp
     }
 }
 
+class CameraShader extends Shader {
+  shared_glsl_code(){
+
+  }
+  vertex_glsl_code(){
+    return `
+attribute vec3 aVertexPosition;
+
+uniform mat4 uPMatrix;
+uniform mat4 uMVMatrix;
+uniform mat4 lightMViewMatrix;
+uniform mat4 lightProjectionMatrix;
+
+const mat4 texUnitConverter = mat4(0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 
+0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.5, 0.5, 0.5, 1.0);
+
+varying vec2 vDepthUv;
+varying vec4 shadowPos;
+
+void main (void) {
+  gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+
+  shadowPos = texUnitConverter * lightProjectionMatrix *
+  lightMViewMatrix * vec4(aVertexPosition, 1.0);
+}
+`
+  }
+  fragment_glsl_code(){
+    var shadowDepthTextureSize = 1024
+
+    return `
+precision mediump float;
+
+varying vec2 vDepthUv;
+varying vec4 shadowPos;
+
+uniform sampler2D depthColorTexture;
+uniform vec3 uColor;
+
+float decodeFloat (vec4 color) {
+  const vec4 bitShift = vec4(
+    1.0 / (256.0 * 256.0 * 256.0),
+    1.0 / (256.0 * 256.0),
+    1.0 / 256.0,
+    1
+  );
+  return dot(color, bitShift);
+}
+
+void main(void) {
+  vec3 fragmentDepth = shadowPos.xyz;
+  float shadowAcneRemover = 0.007;
+  fragmentDepth.z -= shadowAcneRemover;
+
+  float texelSize = 1.0 / ${shadowDepthTextureSize}.0;
+  float amountInLight = 0.0;
+
+  for (int x = -1; x <= 1; x++) {
+    for (int y = -1; y <= 1; y++) {
+      float texelDepth = decodeFloat(texture2D(depthColorTexture,
+      fragmentDepth.xy + vec2(x, y) * texelSize));
+      if (fragmentDepth.z < texelDepth) {
+        amountInLight += 1.0;
+      }
+    }
+  }
+  amountInLight /= 9.0;
+
+  gl_FragColor = vec4(amountInLight * uColor, 1.0);
+}
+`
+  }
+}
+
+class LightShader extends Shader {
+  shared_glsl_code(){
+
+  }
+  vertex_glsl_code(){
+    return `
+attribute vec3 aVertexPosition;
+
+uniform mat4 uPMatrix;
+uniform mat4 uMVMatrix;
+
+void main (void) {
+  gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+}
+`
+  }
+
+  fragment_glsl_code(){
+    return `
+precision mediump float;
+
+vec4 encodeFloat (float depth) {
+  const vec4 bitShift = vec4(
+    256 * 256 * 256,
+    256 * 256,
+    256,
+    1.0
+  );
+  const vec4 bitMask = vec4(
+    0,
+    1.0 / 256.0,
+    1.0 / 256.0,
+    1.0 / 256.0
+  );
+  vec4 comp = fract(depth * bitShift);
+  comp -= comp.xxyz * bitMask;
+  return comp;
+}
+
+void main (void) {
+  gl_FragColor = encodeFloat(gl_FragCoord.z);
+}
+`
+  }
+
+}
 
 window.Tanks = window.classes.Tanks =
 class Tanks extends Scene_Component
@@ -408,7 +528,7 @@ class Tanks extends Scene_Component
 
         const r = context.width/context.height;
         context.globals.graphics_state.projection_transform = Mat4.perspective( Math.PI/4, r, .1, 1000 );
-
+        this.gl = context.gl;
         this.shapes = {
                          block : new Cube(),
                          square: new Square(),
@@ -447,6 +567,7 @@ class Tanks extends Scene_Component
         this.score = curr_level = 0;
         score_global=this.score;
         remaining_balls = this.total_ammo;
+        this.floor = 
 
                                      // Make some Material objects available to you:
         this.materials =
@@ -458,12 +579,21 @@ class Tanks extends Scene_Component
               turretBody:     context.get_instance( Phong_Shader ).material( Color.of( 0.3,0.5,0.2,1 ), { ambient:0.4 } ),
               ground: context.get_instance( Phong_Shader ).material(Color.of(0,0,0,1), {ambient: 1, texture: context.get_instance("assets/groundhigherres.jpg", false)}),
               wall: context.get_instance( Phong_Shader ).material(Color.of(0,0,0,1), {ambient: 1, texture: context.get_instance("assets/brick.png", false)}),
-              sun:      context.get_instance(Phong_Shader  ).material( Color.of( 249/255,215/255,28/255,1 ), { ambient:0.9   } )
+              sun:      context.get_instance(Phong_Shader  ).material( Color.of( 249/255,215/255,28/255,1 ), { ambient:0.9   } ),
+              lightShader: context.get_instance(LightShader),
+              cameraShader: context.get_instance(CameraShader)
+
+
             //ring:     context.get_instance( Ring_Shader  ).material()
 
                                 // TODO:  Fill in as many additional material objects as needed in this key/value table.
                                 //        (Requirement 1)
           }
+        
+        //this.setUpShader()
+        //shadow texture stuff
+        // this.shadowFramebuffer = this.gl.createFramebuffer()
+        // this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.shadowFramebuffer)
 
         this.bodiesInColumns = []
         this.freeBodies = []
@@ -477,8 +607,43 @@ class Tanks extends Scene_Component
         
 
       }
-      // gametext(document_element) {
-      //   document_element.innerHTML += `<p>Score` + this.score + `<t> Current Level:` + this.level + `</p>`
+
+      // setUpShader() {
+
+      //   this.shadowFramebuffer = this.gl.createFramebuffer()
+      //   this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.shadowFramebuffer)
+      //   this.shadowDepthTexture = this.gl.createTexture()
+      //   this.gl.bindTexture(this.gl.TEXTURE_2D, this.shadowDepthTexture)
+      //   this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.NEAREST)
+      //   this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.NEAREST)
+      //   this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, 1024,
+      //     1024, 0, this.gl.RGBA, this.gl.UNSIGNED_BYTE, null)
+
+      //   this.renderBuffer = this.gl.createRenderbuffer()
+      //   this.gl.bindRenderbuffer(this.gl.RENDERBUFFER, this.renderBuffer)
+      //   this.gl.renderbufferStorage(this.gl.RENDERBUFFER, this.gl.DEPTH_COMPONENT16,
+      //       1024, 1024)
+
+      //   this.gl.framebufferTexture2D(this.gl.FRAMEBUFFER, this.gl.COLOR_ATTACHMENT0,
+      //       this.gl.TEXTURE_2D, this.shadowDepthTexture, 0)
+      //   this.gl.framebufferRenderbuffer(this.gl.FRAMEBUFFER, this.gl.DEPTH_ATTACHMENT,
+      //       this.gl.RENDERBUFFER, this.renderBuffer)
+
+      //   this.gl.bindTexture(this.gl.TEXTURE_2D, null)
+      //   this.gl.bindRenderbuffer(this.gl.RENDERBUFFER, null)
+
+      //   this.shadowPMatrix = this.gl.getUniformLocation(this.materials.lightShader.program, 'uPMatrix');
+      //   this.shadowMVMatrix = this.gl.getUniformLocation(this.materials.lightShader.program, 'uMVMatrix');
+
+      //   this.lightProjectionMatrix = Mat4.orthographic(
+      //       -300, 300, -10, 100, -300, 300
+      //   );
+      //   this.lightViewMatrix = Mat4.look_at(Vec.of(0, 2, -3), Vec.of(0, 0, 0),
+      //     Vec.of(0, 1, 0));
+
+      //   this.gl.uniformMatrix4fv(this.shadowPMatrix, false, this.lightProjectionMatrix)
+      //   this.gl.uniformMatrix4fv(this.shadowMVMatrix, false, this.lightViewMatrix)
+
       // }
       create_cubemap(gl) {
         var texture = gl.createTexture();
