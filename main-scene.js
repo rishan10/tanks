@@ -1,6 +1,7 @@
 var score_global;
 var remaining_balls;
 var curr_level;
+var status = 0;
 class Vector extends Float32Array
 {                                   // **Vector** stores vectors of floating point numbers.  Puts vector math into JavaScript.
                                     // Note:  Vectors should be created with of() due to wierdness with the TypedArray spec.
@@ -344,12 +345,14 @@ class ScorePanel extends Scene_Component    // Movement_Controls is a Scene_Comp
       // this.new_line();
       // this.live_string( box => box.textContent = "Position: " + this.pos[0].toFixed(2) + ", " + this.pos[1].toFixed(2) 
       //                                                  + ", " + this.pos[2].toFixed(2) );
-      this.new_line();        // The facing directions are actually affected by the left hand rule:
-      this.live_string( box => box.textContent = "Score: " + score_global);
-      this.new_line();        // The facing directions are actually affected by the left hand rule:
-      this.live_string( box => box.textContent = "Total Ammo remaining: " + remaining_balls);
-      this.new_line();
-      this.live_string( box => box.textContent = "Current Level:" + curr_level);
+      
+        this.new_line();        // The facing directions are actually affected by the left hand rule:
+        this.live_string( box => box.textContent = (status == 0 ? "Score: " : "FINAL SCORE:") + score_global);
+        this.new_line();        // The facing directions are actually affected by the left hand rule:
+        this.live_string( box => box.textContent = (status == 0 ? "Total Ammo remaining: " + remaining_balls : (status == 1 ? "CONGRATS ON BEATING ALL 5 LEVELS" : "GAME OVER, GET BETTER ")));
+        this.new_line();
+        this.live_string( box => box.textContent = "Current Level:" + curr_level);
+     
       // this.new_line();     
       // this.key_triggered_button( "Go to world origin", [ "r" ], () => this.target().set_identity( 4,4 ), "orange" );  this.new_line();
       // this.key_triggered_button( "Attach to global camera", [ "Shift", "R" ], () => 
@@ -528,7 +531,6 @@ class Tanks extends Scene_Component
 
         context.globals.graphics_state.camera_transform = Mat4.look_at( Vec.of( 7.85,40.51,-158.78 ), Vec.of( 0,0,0 ), Vec.of( 0,1,0 ) );
         this.initial_camera_location = Mat4.inverse( context.globals.graphics_state.camera_transform );
-
         const r = context.width/context.height;
         context.globals.graphics_state.projection_transform = Mat4.perspective( Math.PI/4, r, .1, 1000 );
         this.gl = context.gl;
@@ -545,7 +547,6 @@ class Tanks extends Scene_Component
                                 // TODO:  Fill in as many additional shape instances as needed in this key/value table.
                                 //        (Requirement 1)
                        }
-
         this.colliders = [
           { intersect_test: Body.intersect_cube,   points: new Cube(),  leeway: .1 },
           { intersect_test: Body.intersect_sphere,   points: new Subdivision_Sphere(4),  leeway: .1 }
@@ -566,7 +567,7 @@ class Tanks extends Scene_Component
         this.c_toggle = false;
         this.reset = true;
         this.rotate_factor = 0;
-        this.level = 0;
+        this.level = 1;
         this.total_ammo = 30;
         this.score = curr_level = 0;
         score_global=this.score;
@@ -911,7 +912,8 @@ class Tanks extends Scene_Component
           this.reset = true;
           this.level = 0;
           curr_level = 0;
-          this.total_ammo = 40;
+          status = 0;
+          this.total_ammo = 30;
           remaining_balls = this.total_ammo;
         } );
         this.new_line();
@@ -943,7 +945,7 @@ class Tanks extends Scene_Component
     }
 
     create_wall1_2(graphics_state, model_transform) {
-        if(this.level == 0 || level == 4)
+        if(this.level == 0 || this.level == 4)
           model_transform = model_transform.times(Mat4.translation([-40,3,0]));
         else if(this.level == 1) 
           model_transform = model_transform.times(Mat4.translation([-40,3,30]));
@@ -1063,6 +1065,7 @@ class Tanks extends Scene_Component
 
     display( graphics_state )
       {
+
         graphics_state.lights = this.lights;        // Use the lights stored in this.lights.
         
 
@@ -1078,6 +1081,7 @@ class Tanks extends Scene_Component
         this.simulate( graphics_state.animation_delta_time );
 
         if (this.total_ammo == 0) {
+          status = 2;
           this.reset = true;
           this.total_ammo = 40;
           remaining_balls = this.total_ammo;
@@ -1115,6 +1119,11 @@ class Tanks extends Scene_Component
         let model_transform = Mat4.identity().times(Mat4.scale([4,4,1]));
 
         model_transform = this.create_ground(graphics_state, Mat4.identity());
+        if (status == 1 || status == 2) {
+          return;
+        }
+        
+
         if(this.reset) {
           this.bodiesInColumns = []
           this.freeBodies = []
@@ -1134,15 +1143,16 @@ class Tanks extends Scene_Component
         if(this.level == 4) {
           for(let bodies of this.bodiesInColumns) {
             for(let body of bodies) {
+              body.linear_velocity[2] = 0;
               if(this.dir == 1){
                 body.center[2] += 1;
               }
               else {
                 body.center[2] -= 1;
               }
-              if(body.center[2] < -50) {
+              if(body.center[2] < -20) {
                 this.dir = 1;
-              } else if (body.center[2] > 50 ) {
+              } else if (body.center[2] > 70 ) {
                 this.dir = 2;
               }
 
@@ -1151,7 +1161,9 @@ class Tanks extends Scene_Component
         }
 
         if (this.isempty()) {
-          console.log(this.level);
+          if(this.level == 4) {
+            status = 1;
+          }
           this.reset = true;
           this.level += 1;
           curr_level += 1;
