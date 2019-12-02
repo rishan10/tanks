@@ -567,11 +567,11 @@ class Tanks extends Scene_Component
         this.reset = true;
         this.rotate_factor = 0;
         this.level = 0;
-        this.total_ammo = 40;
+        this.total_ammo = 30;
         this.score = curr_level = 0;
         score_global=this.score;
         remaining_balls = this.total_ammo;
-        this.floor = 
+       
 
                                      // Make some Material objects available to you:
         this.materials =
@@ -598,7 +598,8 @@ class Tanks extends Scene_Component
           }
         
         
-        this.setUpShader(this.gl)
+
+        // this.setUpShader(this.gl)
         //shadow texture stuff
         // this.shadowFramebuffer = this.gl.createFramebuffer()
         // this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.shadowFramebuffer)
@@ -610,59 +611,60 @@ class Tanks extends Scene_Component
         this.steps_taken = 0;
         this.t = 0;
         this.time_scale = 1;
+        this.dir = 1;
         this.time_accumulator = 0;
         this.lights = [ new Light( Vec.of( 5,-10,5,1 ), Color.of( 0, 1, 1, 1 ), 1000 ) ];
         
 
       }
 
-      setUpShader(gl) {
-var frame_buffer, color_buffer, depth_buffer, status;
+//       setUpShader(gl) {
+// var frame_buffer, color_buffer, depth_buffer, status;
 
-  // Step 1: Create a frame buffer object
-  frame_buffer = gl.createFramebuffer();
+//   // Step 1: Create a frame buffer object
+//   frame_buffer = gl.createFramebuffer();
 
-  // Step 2: Create and initialize a texture buffer to hold the colors.
-  color_buffer = gl.createTexture();
-  gl.bindTexture(gl.TEXTURE_2D, color_buffer);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1024, 1024, 0,
-                                  gl.RGBA, gl.UNSIGNED_BYTE, null);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+//   // Step 2: Create and initialize a texture buffer to hold the colors.
+//   color_buffer = gl.createTexture();
+//   gl.bindTexture(gl.TEXTURE_2D, color_buffer);
+//   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1024, 1024, 0,
+//                                   gl.RGBA, gl.UNSIGNED_BYTE, null);
+//   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+//   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+//   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+//   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
-  // Step 3: Create and initialize a texture buffer to hold the depth values.
-  // Note: the WEBGL_depth_texture extension is required for this to work
-  //       and for the gl.DEPTH_COMPONENT texture format to be supported.
-  depth_buffer = gl.createTexture();
-  gl.bindTexture(gl.TEXTURE_2D, depth_buffer);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT, 1024, 1024, 0,
-                                  gl.DEPTH_COMPONENT, gl.UNSIGNED_INT, null);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+//   // Step 3: Create and initialize a texture buffer to hold the depth values.
+//   // Note: the WEBGL_depth_texture extension is required for this to work
+//   //       and for the gl.DEPTH_COMPONENT texture format to be supported.
+//   depth_buffer = gl.createTexture();
+//   gl.bindTexture(gl.TEXTURE_2D, depth_buffer);
+//   gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT, 1024, 1024, 0,
+//                                   gl.DEPTH_COMPONENT, gl.UNSIGNED_INT, null);
+//   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+//   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+//   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+//   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
-  // Step 4: Attach the specific buffers to the frame buffer.
-  gl.bindFramebuffer(gl.FRAMEBUFFER, frame_buffer);
-  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, color_buffer, 0);
-  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT,  gl.TEXTURE_2D, depth_buffer, 0);
+//   // Step 4: Attach the specific buffers to the frame buffer.
+//   gl.bindFramebuffer(gl.FRAMEBUFFER, frame_buffer);
+//   gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, color_buffer, 0);
+//   gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT,  gl.TEXTURE_2D, depth_buffer, 0);
 
-  // Step 5: Verify that the frame buffer is valid.
-  status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
-  if (status !== gl.FRAMEBUFFER_COMPLETE) {
-    console.log("The created frame buffer is invalid: " + status.toString());
-  }
+//   // Step 5: Verify that the frame buffer is valid.
+//   status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+//   if (status !== gl.FRAMEBUFFER_COMPLETE) {
+//     console.log("The created frame buffer is invalid: " + status.toString());
+//   }
 
-  // Unbind these new objects, which makes the default frame buffer the
-  // target for rendering.
-  gl.bindTexture(gl.TEXTURE_2D, null);
-  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+//   // Unbind these new objects, which makes the default frame buffer the
+//   // target for rendering.
+//   gl.bindTexture(gl.TEXTURE_2D, null);
+//   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
-  return frame_buffer;
+//   return frame_buffer;
 
-      }
+//       }
       // create_cubemap(gl) {
       //   var texture = gl.createTexture();
       //   //var depthProgramID = LoadShaders( "depthShader.vertexshader", "depthShader.fragmentshader" );
@@ -887,8 +889,8 @@ var frame_buffer, color_buffer, depth_buffer, status;
           this.total_ammo -= 1;
           remaining_balls = this.total_ammo;
           if(this.total_ammo != 2){
-            this.projectiles.push(new Body(this.shapes.ball, this.materials.test, vec3(1,1,1))
-              .emplace(this.model_tank.times(Mat4.translation([0,2,6])), vec3(this.power*Math.sin(this.rotate_factor),this.power * Math.sin(this.turret_angle*(Math.PI/180.0))*Math.cos(this.rotate_factor),this.power * Math.cos(this.turret_angle*(Math.PI/180.0))), 0, vec3(1,0,0) ));
+            this.projectiles = [new Body(this.shapes.ball, this.materials.test, vec3(1,1,1))
+              .emplace(this.model_tank.times(Mat4.translation([0,2,6])), vec3(this.power*Math.sin(this.rotate_factor),this.power * Math.sin(this.turret_angle*(Math.PI/180.0))*Math.cos(this.rotate_factor),this.power * Math.cos(this.turret_angle*(Math.PI/180.0))), 0, vec3(1,0,0) )];
           }   
           else {
             this.projectiles.push(new Body(this.shapes.ball, this.materials.final, vec3(1,1,1))
@@ -941,7 +943,7 @@ var frame_buffer, color_buffer, depth_buffer, status;
     }
 
     create_wall1_2(graphics_state, model_transform) {
-        if(this.level == 0)
+        if(this.level == 0 || level == 4)
           model_transform = model_transform.times(Mat4.translation([-40,3,0]));
         else if(this.level == 1) 
           model_transform = model_transform.times(Mat4.translation([-40,3,30]));
@@ -968,8 +970,8 @@ var frame_buffer, color_buffer, depth_buffer, status;
     }
 
 
-    create_wall4_5(graphics_state, model_transform) {
-        model_transform = model_transform.times(Mat4.translation([-40,3,35]));
+    create_wall4(graphics_state, model_transform) {
+        model_transform = model_transform.times(Mat4.translation([-130,3,35]));
 
 
         for(var i = 0; i < 6; i++) {
@@ -987,7 +989,12 @@ var frame_buffer, color_buffer, depth_buffer, status;
                 .times( Mat4.translation([8, -24,0]));
         }
 
-        model_transform = model_transform.times(Mat4.translation([50,0,70]));
+        if(this.level == 3)
+          model_transform = model_transform.times(Mat4.translation([100,0,55]));
+        else if(this.level == 4) 
+          model_transform = model_transform.times(Mat4.translation([170,0,25]));
+
+        
 
         for(var i = 0; i < 6; i++) {
           let bodies = []
@@ -1113,14 +1120,34 @@ var frame_buffer, color_buffer, depth_buffer, status;
           this.freeBodies = []
           this.freeBodiesHit = {}
           this.projectiles = []
-          if (this.level <= 2) {
+          if (this.level <= 2 || this.level == 4) {
             model_transform = this.create_wall1_2(graphics_state, model_transform);
           }
-          else if(this.level <=4) {
-            model_transform = this.create_wall4_5(graphics_state, model_transform);
+          else if(this.level <=3) {
+            model_transform = this.create_wall4(graphics_state, model_transform);
           }
+
+
           //this.physics_on_one_block(graphics_state, Mat4.identity())
           this.reset = false;
+        }
+        if(this.level == 4) {
+          for(let bodies of this.bodiesInColumns) {
+            for(let body of bodies) {
+              if(this.dir == 1){
+                body.center[2] += 1;
+              }
+              else {
+                body.center[2] -= 1;
+              }
+              if(body.center[2] < -50) {
+                this.dir = 1;
+              } else if (body.center[2] > 50 ) {
+                this.dir = 2;
+              }
+
+            }
+          }
         }
 
         if (this.isempty()) {
