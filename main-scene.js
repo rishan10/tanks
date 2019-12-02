@@ -408,6 +408,7 @@ class Tanks extends Scene_Component
 
         const r = context.width/context.height;
         context.globals.graphics_state.projection_transform = Mat4.perspective( Math.PI/4, r, .1, 1000 );
+        
 
         this.shapes = {
                          block : new Cube(),
@@ -450,7 +451,9 @@ class Tanks extends Scene_Component
 
                                      // Make some Material objects available to you:
         this.materials =
-          {   test:     context.get_instance( Phong_Shader ).material( Color.of( 0,0,1,1 ), { ambient:1 } ),
+          {   
+              bump: context.get_instance(Bump_Map).material(Color.of(0,0,1,1), {ambient: 1}),
+              test:     context.get_instance( Phong_Shader ).material( Color.of( 0,0,1,1 ), { ambient:1 } ),
               level: context.get_instance( Phong_Shader ).material( Color.of( 0,1,0,1 ), { ambient:1 } ),
               final: context.get_instance(Phong_Shader).material(Color.of(1,0,0,1), {ambient:1}),
               tankBody:     context.get_instance( Phong_Shader ).material( Color.of( 0.5,0.7,0.4,1 ), { ambient:0.4 } ),
@@ -458,7 +461,7 @@ class Tanks extends Scene_Component
               turretBody:     context.get_instance( Phong_Shader ).material( Color.of( 0.3,0.5,0.2,1 ), { ambient:0.4 } ),
               ground: context.get_instance( Phong_Shader ).material(Color.of(0,0,0,1), {ambient: 1, texture: context.get_instance("assets/groundhigherres.jpg", false)}),
               wall: context.get_instance( Phong_Shader ).material(Color.of(0,0,0,1), {ambient: 1, texture: context.get_instance("assets/brick.png", false)}),
-              sun:      context.get_instance(Phong_Shader  ).material( Color.of( 249/255,215/255,28/255,1 ), { ambient:0.9   } )
+              sun:      context.get_instance(Bump_Map  ).material( Color.of( 249/255,215/255,28/255,1 ), { ambient:0.6   } )
             //ring:     context.get_instance( Ring_Shader  ).material()
 
                                 // TODO:  Fill in as many additional material objects as needed in this key/value table.
@@ -864,11 +867,11 @@ class Tanks extends Scene_Component
         this.shapes.block.draw( graphics_state, model_transform, this.materials.turretBody );
     }
 
-    create_level_blips(graphics_state, offset){
-        let levelScale = Mat4.identity().times(Mat4.scale([1,1,1]));
-        levelScale = levelScale.times(Mat4.translation(Vec.of(105-offset,60,0)));
-        this.shapes.ball.draw(graphics_state, levelScale, this.materials.level);
-    }
+//     create_level_blips(graphics_state, offset){
+//         let levelScale = Mat4.identity().times(Mat4.scale([1,1,1]));
+//         levelScale = levelScale.times(Mat4.translation(Vec.of(105-offset,60,0)));
+//         this.shapes.ball.draw(graphics_state, levelScale, this.materials.level);
+//     }
 
     display( graphics_state )
       {
@@ -883,7 +886,7 @@ class Tanks extends Scene_Component
         graphics_state.lights = [ new Light( Vec.of(-10,10,-10,1), sunColor, 10**sunRadius) ];
         this.shapes.sun.draw(graphics_state, sunScale, this.materials.sun);
         
-        this.create_level_blips(graphics_state, 0);
+        //this.create_level_blips(graphics_state, 0);
         this.simulate( graphics_state.animation_delta_time );
 
         if (this.total_ammo == 0) {
@@ -949,7 +952,7 @@ class Tanks extends Scene_Component
           this.total_ammo = 40 + 5*(this.level-1);
          remaining_balls = this.total_ammo;
 
-          this.create_level_blips(graphics_state, 5*(this.level-1));
+          //this.create_level_blips(graphics_state, 5*(this.level-1));
           
         }
 
@@ -1026,3 +1029,46 @@ window.Cube = window.classes.Cube =
         // It stinks to manage arrays this big.  Later we'll show code that generates these same cube vertices more automatically.
     }
     }
+
+
+window.Bump_Map = window.classes.Bump_Map = 
+class Bump_Map extends Phong_Shader                         
+{ fragment_glsl_code()            
+    { return `
+        uniform sampler2D texture;
+        void main()
+        { if( GOURAUD || COLOR_NORMALS )    
+          { gl_FragColor = VERTEX_COLOR;              
+            return;
+          }                                 
+                                           
+          
+          vec4 tex_color = texture2D( texture, f_tex_coord );                    
+          vec3 bumps  = normalize( N + tex_color.rgb - 0.8*vec3(1,1,1) );      
+                                                                                 
+                                                                                 
+                                                                                 
+          if( USE_TEXTURE ) gl_FragColor = vec4( ( tex_color.xyz + shapeColor.xyz ) * ambient, shapeColor.w * tex_color.w ); 
+          else gl_FragColor = vec4( shapeColor.xyz * ambient, shapeColor.w );
+          gl_FragColor.xyz += phong_model_lights( bumps );                    
+        }`;
+    }
+}
+
+
+window.Cube = window.classes.Cube =
+class Cube extends Shape    // A cube inserts six square strips into its arrays.
+{ constructor(val = 1)  
+    { super( "positions", "normals", "texture_coords" );
+      for( var i = 0; i < 3; i++ )                    
+        for( var j = 0; j < 2; j++ )
+        { var square_transform = Mat4.rotation( i == 0 ? Math.PI/2 : 0, Vec.of(1, 0, 0) )
+                         .times( Mat4.rotation( Math.PI * j - ( i == 1 ? Math.PI/2 : 0 ), Vec.of( 0, 1, 0 ) ) )
+                         .times( Mat4.translation([ 0, 0, 1 ]) );
+          if(val === 1)
+            Square.insert_transformed_copy_into( this, [], square_transform );
+          if(val === 2)
+            Square_2.insert_transformed_copy_into( this, [], square_transform )
+        }
+    }
+}
