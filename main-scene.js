@@ -576,7 +576,7 @@ class Tanks extends Scene_Component
                                      // Make some Material objects available to you:
         this.materials =
           {   
-              bump: context.get_instance(Bump_Map).material(Color.of(0,0,1,1), {ambient: 1}),
+              bump: context.get_instance(Bump_Map_Shader).material(Color.of(0,0,1,1), {ambient: 1}),
               test:     context.get_instance( Phong_Shader ).material( Color.of( 0,0,1,1 ), { ambient:1 } ),
               level: context.get_instance( Phong_Shader ).material( Color.of( 0,1,0,1 ), { ambient:1 } ),
               final: context.get_instance(Phong_Shader).material(Color.of(1,0,0,1), {ambient:1}),
@@ -590,7 +590,7 @@ class Tanks extends Scene_Component
 
 
 
-              sun:      context.get_instance(Bump_Map  ).material( Color.of( 249/255,215/255,28/255,1 ), { ambient:0.6   } ),
+              sun:      context.get_instance(Bump_Map_Shader  ).material( Color.of( 249/255,215/255,28/255,1 ), { ambient:0.6   } )
             //ring:     context.get_instance( Ring_Shader  ).material()
 
                                 // TODO:  Fill in as many additional material objects as needed in this key/value table.
@@ -1213,8 +1213,8 @@ window.Cube = window.classes.Cube =
     }
 
 
-window.Bump_Map = window.classes.Bump_Map = 
-class Bump_Map extends Phong_Shader                         
+window.Bump_Map_Shader = window.classes.Bump_Map_Shader = 
+class Bump_Map_Shader extends Phong_Shader                         
 { fragment_glsl_code()            
     { return `
         uniform sampler2D texture;
