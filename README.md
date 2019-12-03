@@ -31,7 +31,7 @@ Aseem - The advanced features I contributed to were the block collision and the 
 
 # Citations
 
-https://github.com/encyclopedia-of-code/tiny-graphics-js
+We used the inertia-demo and the collision demo structure and we used part of the tiny graphics library: https://github.com/encyclopedia-of-code/tiny-graphics-js
 
 We used some google images and we used texture code from project 4. We also adapted some code from this blog in order to take care of collisions: https://blogs.msdn.microsoft.com/faber/2013/01/09/elastic-collisions-of-balls/
 
