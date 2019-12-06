@@ -8,8 +8,9 @@ Aseem Sane, 804915018, aseem.adm@gmail.com, aseem191
 Andrew Zeff, 804994987, apzsfo@gmail.com, apzsfo
 
 # Project Details
+Team Name: **Tanks**
 
-Our project is a tank game. The motivation is taken from brick-breaker but basically you have limited ammo and the point of the game is to destroy the wall with the ammo you have. You have one tank and you can either choose to have a third person view or a first person view with a toggle button - c (for camera). The controls are as follows: to move the tank turret up you press w (moves 5 degrees at a time), for down you press s, for right you press d, and for left you press a. To fire ammo, the player needs to press space. There are 5 levels, each level getting progressively harder. Once you finish all 5 levels, your score is the amount of balls you have left over after completing each level. Once you destroy all the blocks in one level, it moves on to the next level. 
+Our project is a **Tank** game. The motivation is taken from brick-breaker but basically you have limited ammo and the point of the game is to destroy the wall with the ammo you have. You have one tank and you can either choose to have a third person view or a first person view with a toggle button - c (for camera). The controls are as follows: to move the tank turret up you press w (moves 5 degrees at a time), for down you press s, for right you press d, and for left you press a. To fire ammo, the player needs to press space. There are 5 levels, each level getting progressively harder. Once you finish all 5 levels, your score is the amount of balls you have left over after completing each level. Once you destroy all the blocks in one level, it moves on to the next level. 
 
 
 # Contributions
