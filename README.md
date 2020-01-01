@@ -1,11 +1,14 @@
 # Members
-Ankith Uppunda, 004782343, auppunda@gmail.com, auppunda
+Ankith Uppunda, auppunda
 
-Rishan Girish, 905016242, rishang10@gmail.com,  rishan10
+Rishan Girish, rishan10
 
-Aseem Sane, 804915018, aseem.adm@gmail.com, aseem191
+Aseem Sane, aseem191
 
-Andrew Zeff, 804994987, apzsfo@gmail.com, apzsfo
+Andrew Zeff, apzsfo
+
+# How to run
+To run the project, run the host.command file and go to http://localhost:8000/ in your browser.
 
 # Project Details
 Team Name: **Tanks**
