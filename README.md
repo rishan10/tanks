@@ -8,7 +8,7 @@ Aseem Sane, aseem191
 Andrew Zeff, apzsfo
 
 # How to run
-To run the project, run the host.command file and go to http://localhost:8000/ in your browser.
+To run the project, run the `host.command` file and go to http://localhost:8000/ in your browser.
 
 # Project Details
 Team Name: **Tanks**
